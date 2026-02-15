@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ورود به سامانه</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm bg-white shadow-md rounded px-6 py-6">
+    <h1 class="text-xl font-bold mb-4 text-center">ورود لیدر / ادمین</h1>
+
+    {% if form.errors %}
+      <div class="bg-red-100 text-red-700 px-3 py-2 rounded text-sm mb-3">
+        نام کاربری یا رمز عبور اشتباه است.
+      </div>
+    {% endif %}
+
+    <form method="post" action="" id="login-form">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="block text-sm mb-1">نام کاربری</label>
+        <input type="text" name="username"
+               class="w-full border rounded px-3 py-2 text-sm"
+               autofocus required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1">رمز عبور</label>
+        <input type="password" name="password"
+               class="w-full border rounded px-3 py-2 text-sm"
+               required>
+      </div>
+
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <button type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded">
+        ورود
+      </button>
+    </form>
+  </div>
+
+<script>
+  // بعد از submit فرم، flag را set می‌کنیم تا بعد از redirect صفحه رفرش شود
+  document.getElementById('login-form').addEventListener('submit', function() {
+    sessionStorage.setItem('just_logged_in', 'true');
+  });
+</script>
+</body>
+</html>
+

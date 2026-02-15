@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مدیریت لیدرها</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-4xl mx-auto py-6">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">مدیریت لیدرها</h1>
+      <div class="space-x-2 space-x-reverse">
+        <a href="/exhibition-admin/dashboard/" class="px-4 py-2 bg-gray-600 text-white rounded text-sm">
+          بازگشت به داشبورد
+        </a>
+        <button id="add-leader-btn" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
+          افزودن لیدر جدید
+        </button>
+      </div>
+    </div>
+
+    <div id="alert-area" class="mb-3"></div>
+
+    <div class="bg-white shadow rounded overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-right text-sm font-semibold">نام کاربری</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">وضعیت</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">حضور فعال</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold">عملیات</th>
+          </tr>
+        </thead>
+        <tbody id="leaders-table-body">
+          {% for leader in leaders %}
+            <tr class="border-b" data-leader-id="{{ leader.id }}">
+              <td class="px-4 py-3 text-sm">{{ leader.username }}</td>
+              <td class="px-4 py-3 text-sm">
+                {% if leader.is_active %}
+                  <span class="text-green-600">فعال</span>
+                {% else %}
+                  <span class="text-red-600">غیرفعال</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-sm">
+                {% if leader.active_visits > 0 %}
+                  <span class="text-blue-600">{{ leader.active_visits }} غرفه</span>
+                {% else %}
+                  <span class="text-gray-400">هیچ</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <div class="flex space-x-2 space-x-reverse">
+                  <button
+                    data-leader-id="{{ leader.id }}"
+                    data-username="{{ leader.username }}"
+                    class="edit-btn px-2 py-1 bg-yellow-500 text-white rounded text-xs">
+                    ویرایش
+                  </button>
+                  <button
+                    data-leader-id="{{ leader.id }}"
+                    data-username="{{ leader.username }}"
+                    class="reset-password-btn px-2 py-1 bg-green-500 text-white rounded text-xs">
+                    ریست رمز
+                  </button>
+                  <button
+                    data-leader-id="{{ leader.id }}"
+                    data-username="{{ leader.username }}"
+                    class="delete-btn px-2 py-1 bg-red-500 text-white rounded text-xs">
+                    حذف
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                هیچ لیدری ثبت نشده است.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal برای افزودن/ویرایش لیدر -->
+  <div id="leader-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h2 id="modal-title" class="text-xl font-bold mb-4">افزودن لیدر جدید</h2>
+      <form id="leader-form">
+        <input type="hidden" id="leader-id-input" name="leader_id" value="">
+        <div class="mb-4">
+          <label class="block text-sm mb-1">نام کاربری</label>
+          <input type="text" id="username-input" name="username" required
+                 class="w-full border rounded px-3 py-2 text-sm">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">رمز عبور</label>
+          <input type="password" id="password-input" name="password"
+                 class="w-full border rounded px-3 py-2 text-sm"
+                 placeholder="برای ویرایش خالی بگذارید">
+        </div>
+        <div class="flex space-x-2 space-x-reverse">
+          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded text-sm">
+            ذخیره
+          </button>
+          <button type="button" id="cancel-modal-btn" class="flex-1 px-4 py-2 bg-gray-400 text-white rounded text-sm">
+            انصراف
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal برای ریست رمز -->
+  <div id="reset-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold mb-4">ریست رمز عبور</h2>
+      <p class="text-sm text-gray-600 mb-4" id="reset-username-text"></p>
+      <form id="reset-password-form">
+        <input type="hidden" id="reset-leader-id-input" name="leader_id" value="">
+        <div class="mb-4">
+          <label class="block text-sm mb-1">رمز عبور جدید</label>
+          <input type="password" id="reset-password-input" name="password" required
+                 class="w-full border rounded px-3 py-2 text-sm">
+        </div>
+        <div class="flex space-x-2 space-x-reverse">
+          <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded text-sm">
+            ذخیره
+          </button>
+          <button type="button" id="cancel-reset-btn" class="flex-1 px-4 py-2 bg-gray-400 text-white rounded text-sm">
+            انصراف
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return "";
+  }
+
+  const csrftoken = getCookie("csrftoken");
+
+  function showAlert(message, type="error") {
+    const alertArea = document.getElementById("alert-area");
+    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
+    const text = type === "error" ? "text-red-700" : "text-green-700";
+    alertArea.innerHTML = `
+      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+        ${message}
+      </div>
+    `;
+    setTimeout(() => { alertArea.innerHTML = ""; }, 3000);
+  }
+
+  // Modal افزودن/ویرایش
+  const addLeaderBtn = document.getElementById("add-leader-btn");
+  const leaderModal = document.getElementById("leader-modal");
+  const leaderForm = document.getElementById("leader-form");
+  const cancelModalBtn = document.getElementById("cancel-modal-btn");
+
+  addLeaderBtn.addEventListener("click", () => {
+    document.getElementById("modal-title").textContent = "افزودن لیدر جدید";
+    document.getElementById("leader-id-input").value = "";
+    document.getElementById("username-input").value = "";
+    document.getElementById("password-input").value = "";
+    document.getElementById("password-input").required = true;
+    leaderModal.classList.remove("hidden");
+  });
+
+  cancelModalBtn.addEventListener("click", () => {
+    leaderModal.classList.add("hidden");
+  });
+
+  // دکمه‌های ویرایش
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const leaderId = btn.dataset.leaderId;
+      const username = btn.dataset.username;
+      document.getElementById("modal-title").textContent = "ویرایش لیدر";
+      document.getElementById("leader-id-input").value = leaderId;
+      document.getElementById("username-input").value = username;
+      document.getElementById("password-input").value = "";
+      document.getElementById("password-input").required = false;
+      leaderModal.classList.remove("hidden");
+    });
+  });
+
+  // Submit فرم افزودن/ویرایش
+  leaderForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const leaderId = document.getElementById("leader-id-input").value;
+    const username = document.getElementById("username-input").value.trim();
+    const password = document.getElementById("password-input").value.trim();
+
+    const formData = new FormData();
+    formData.append("username", username);
+    if (password) {
+      formData.append("password", password);
+    }
+
+    const url = leaderId 
+      ? `/exhibition-admin/leaders/${leaderId}/edit/`
+      : "/exhibition-admin/leaders/create/";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        showAlert(data.error || "خطایی رخ داد.");
+      } else {
+        showAlert("عملیات با موفقیت انجام شد.", "success");
+        leaderModal.classList.add("hidden");
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    } catch (e) {
+      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+    }
+  });
+
+  // Modal ریست رمز
+  const resetPasswordModal = document.getElementById("reset-password-modal");
+  const resetPasswordForm = document.getElementById("reset-password-form");
+  const cancelResetBtn = document.getElementById("cancel-reset-btn");
+
+  document.querySelectorAll(".reset-password-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const leaderId = btn.dataset.leaderId;
+      const username = btn.dataset.username;
+      document.getElementById("reset-leader-id-input").value = leaderId;
+      document.getElementById("reset-username-text").textContent = `لیدر: ${username}`;
+      document.getElementById("reset-password-input").value = "";
+      resetPasswordModal.classList.remove("hidden");
+    });
+  });
+
+  cancelResetBtn.addEventListener("click", () => {
+    resetPasswordModal.classList.add("hidden");
+  });
+
+  resetPasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const leaderId = document.getElementById("reset-leader-id-input").value;
+    const password = document.getElementById("reset-password-input").value.trim();
+
+    const formData = new FormData();
+    formData.append("password", password);
+
+    try {
+      const response = await fetch(`/exhibition-admin/leaders/${leaderId}/reset-password/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        showAlert(data.error || "خطایی رخ داد.");
+      } else {
+        showAlert("رمز عبور با موفقیت تغییر کرد.", "success");
+        resetPasswordModal.classList.add("hidden");
+      }
+    } catch (e) {
+      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+    }
+  });
+
+  // دکمه‌های حذف
+  document.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const leaderId = btn.dataset.leaderId;
+      const username = btn.dataset.username;
+      
+      if (!confirm(`آیا مطمئن هستید که می‌خواهید لیدر "${username}" را حذف کنید؟`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/exhibition-admin/leaders/${leaderId}/delete/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok || data.error) {
+          showAlert(data.error || "خطایی رخ داد.");
+        } else {
+          showAlert("لیدر با موفقیت حذف شد.", "success");
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      } catch (e) {
+        showAlert("مشکلی در ارتباط با سرور رخ داد.");
+      }
+    });
+  });
+</script>
+</body>
+</html>

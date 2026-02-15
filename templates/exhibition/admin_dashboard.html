@@ -1,0 +1,223 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>پنل مدیریتی غرفه‌ها</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <script>
+    // اطمینان از رفرش صفحه بعد از لاگین
+    if (sessionStorage.getItem('just_logged_in') === 'true') {
+      sessionStorage.removeItem('just_logged_in');
+      window.location.reload();
+    }
+  </script>
+  <div class="max-w-4xl mx-auto py-6">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">داشبورد مدیریت غرفه‌ها</h1>
+      <a href="/exhibition-admin/leaders/" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
+        مدیریت لیدرها
+      </a>
+    </div>
+
+    <div id="alert-area" class="mb-3"></div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for item in booth_status %}
+        <div id="admin-booth-card-{{ item.booth.id }}" class="bg-white shadow rounded p-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-lg">{{ item.booth.name }}</span>
+            <span class="text-sm text-gray-600">
+              ظرفیت کل: {{ item.booth.max_groups }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center mb-2">
+            <span id="admin-occupied-{{ item.booth.id }}" class="text-sm">
+              اشغال: {{ item.occupied }} / {{ item.booth.max_groups }}
+            </span>
+            <span id="admin-remaining-{{ item.booth.id }}" class="text-sm">
+              باقی‌مانده: {{ item.remaining }}
+            </span>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-sm mb-1">لیدرهای حاضر:</h3>
+            <ul id="admin-leaders-{{ item.booth.id }}" class="space-y-1 text-sm">
+              {% for leader in item.leaders %}
+                <li class="flex justify-between items-center border-b pb-1">
+                  <span>{{ leader.username }}</span>
+                  <button
+                    data-booth-id="{{ item.booth.id }}"
+                    data-user-id="{{ leader.id }}"
+                    class="kick-btn text-xs px-2 py-1 rounded bg-red-500 text-white">
+                    اخراج
+                  </button>
+                </li>
+              {% empty %}
+                <li class="text-gray-500 text-sm">هیچ لیدری در این غرفه نیست.</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+<script>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return "";
+  }
+
+  const csrftoken = getCookie("csrftoken");
+
+  function showAlert(message, type="error") {
+    const alertArea = document.getElementById("alert-area");
+    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
+    const text = type === "error" ? "text-red-700" : "text-green-700";
+    alertArea.innerHTML = `
+      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+        ${message}
+      </div>
+    `;
+    setTimeout(() => { alertArea.innerHTML = ""; }, 3000);
+  }
+
+  async function postKick(url) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      if (!response.ok) {
+        showAlert("در انجام عملیات خطایی رخ داد. لطفاً دوباره تلاش کنید.");
+        return;
+      }
+
+      showAlert("عملیات با موفقیت انجام شد.", "success");
+    } catch (e) {
+      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+    }
+  }
+
+  document.querySelectorAll(".kick-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const boothId = btn.dataset.boothId;
+      const userId = btn.dataset.userId;
+      const url = `/exhibition-admin/booths/${boothId}/kick/${userId}/`;
+      postKick(url);
+    });
+  });
+
+  function applySnapshotFromBooth(booth) {
+    const boothId = booth.id;
+
+    const occupiedSpan = document.getElementById(`admin-occupied-${boothId}`);
+    const remainingSpan = document.getElementById(`admin-remaining-${boothId}`);
+    if (occupiedSpan && remainingSpan) {
+      const total = booth.occupied + booth.remaining;
+      occupiedSpan.textContent = `اشغال: ${booth.occupied} / ${total}`;
+      remainingSpan.textContent = `باقی‌مانده: ${booth.remaining}`;
+    }
+
+    const list = document.getElementById(`admin-leaders-${boothId}`);
+    if (list) {
+      list.innerHTML = "";
+      if (!booth.leaders || booth.leaders.length === 0) {
+        list.innerHTML = '<li class="text-gray-500 text-sm">هیچ لیدری در این غرفه نیست.</li>';
+      } else {
+        booth.leaders.forEach(leader => {
+          const li = document.createElement("li");
+          li.className = "flex justify-between items-center border-b pb-1";
+          
+          // اگر leader یک object است (از WebSocket یا API) با id و username
+          const username = typeof leader === "string" ? leader : leader.username;
+          const leaderId = typeof leader === "object" && leader.id ? leader.id : null;
+          
+          if (leaderId) {
+            // دکمه اخراج را می‌سازیم
+            li.innerHTML = `
+              <span>${username}</span>
+              <button
+                data-booth-id="${boothId}"
+                data-user-id="${leaderId}"
+                class="kick-btn text-xs px-2 py-1 rounded bg-red-500 text-white">
+                اخراج
+              </button>
+            `;
+            // event listener را دوباره اضافه می‌کنیم
+            const kickBtn = li.querySelector(".kick-btn");
+            if (kickBtn) {
+              kickBtn.addEventListener("click", () => {
+                const url = `/exhibition-admin/booths/${boothId}/kick/${leaderId}/`;
+                postKick(url);
+              });
+            }
+          } else {
+            // اگر id نداریم (fallback قدیمی)، فقط username را نشان می‌دهیم
+            li.innerHTML = `
+              <span>${username}</span>
+              <span class="text-xs text-gray-400">آنلاین</span>
+            `;
+          }
+          
+          list.appendChild(li);
+        });
+      }
+    }
+  }
+
+  // WebSocket (اگر Redis/WS در دسترس باشد)
+  try {
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/capacity/`);
+
+    ws.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      applySnapshotFromBooth({
+        id: data.booth_id,
+        occupied: data.occupied,
+        remaining: data.remaining,
+        leaders: data.leaders,
+      });
+    };
+  } catch (e) {
+    // اگر WebSocket در دسترس نبود، صرفاً از polling استفاده می‌کنیم
+  }
+
+  // Polling fallback: هر ۱.۵ ثانیه وضعیت را از سرور می‌گیریم
+  async function pollStatus() {
+    try {
+      const response = await fetch("/exhibition-admin/api/booth-status/", {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json();
+      if (payload.booths && Array.isArray(payload.booths)) {
+        payload.booths.forEach(applySnapshotFromBooth);
+      }
+    } catch (e) {
+      // در صورت خطا، سکوت می‌کنیم تا رابط کاربری کاربر را اذیت نکند
+    }
+  }
+
+  setInterval(pollStatus, 1500);
+</script>
+</body>
+</html>
+

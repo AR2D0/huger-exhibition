@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>داشبورد لیدر</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <script>
+    // اطمینان از رفرش صفحه بعد از لاگین
+    if (sessionStorage.getItem('just_logged_in') === 'true') {
+      sessionStorage.removeItem('just_logged_in');
+      window.location.reload();
+    }
+  </script>
+  <div class="max-w-md mx-auto py-4">
+    <h1 class="text-xl font-bold text-center mb-4">مدیریت ظرفیت غرفه‌ها</h1>
+
+    <div id="alert-area" class="mb-3"></div>
+
+    <div class="space-y-3">
+      {% for booth in booths %}
+        <div id="booth-card-{{ booth.id }}"
+             class="bg-white shadow rounded p-3 flex flex-col">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-lg">
+              {{ booth.name }}
+            </span>
+            <span class="text-sm text-gray-600">
+              ظرفیت: {{ booth.max }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center mb-2">
+            <span id="occupied-{{ booth.id }}" class="text-sm">
+              اشغال: {{ booth.occupied }} / {{ booth.max }}
+            </span>
+            <span id="remaining-{{ booth.id }}" class="text-sm">
+              باقی‌مانده: {{ booth.remaining }}
+            </span>
+          </div>
+
+          <div class="flex space-x-2 space-x-reverse mt-2">
+            <button
+              data-booth-id="{{ booth.id }}"
+              class="enter-btn flex-1 px-3 py-2 rounded text-white text-sm
+                     {% if booth.remaining <= 0 %}bg-gray-400 cursor-not-allowed{% else %}bg-green-600{% endif %}">
+              ورود
+            </button>
+
+            <button
+              data-booth-id="{{ booth.id }}"
+              class="exit-btn flex-1 px-3 py-2 rounded text-white text-sm
+                     {% if booth.is_user_inside %}bg-red-600{% else %}bg-gray-400 cursor-not-allowed{% endif %}">
+              خروج
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+<script>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return "";
+  }
+
+  // روش استاندارد Django برای CSRF: خواندن از کوکی csrftoken
+  const csrftoken = getCookie("csrftoken");
+
+  function showAlert(message, type="error") {
+    const alertArea = document.getElementById("alert-area");
+    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
+    const text = type === "error" ? "text-red-700" : "text-green-700";
+    alertArea.innerHTML = `
+      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+        ${message}
+      </div>
+    `;
+    setTimeout(() => { alertArea.innerHTML = ""; }, 3000);
+  }
+
+  async function postAction(url) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      // بدنه‌ی پاسخ برای ما مهم نیست؛ فقط اگر خطای HTTP بود پیام نشان می‌دهیم
+      if (!response.ok) {
+        // ممکن است پاسخ JSON نباشد (مثلاً HTML صفحه خطا). پیام عمومی نشان می‌دهیم.
+        showAlert("در انجام عملیات خطایی رخ داد. لطفاً دوباره تلاش کنید.");
+        return;
+      }
+
+      // در حالت موفق، بدون وابستگی به JSON، صفحه را رفرش می‌کنیم
+      window.location.reload();
+    } catch (e) {
+      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+    }
+  }
+
+  document.querySelectorAll(".enter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const boothId = btn.dataset.boothId;
+      if (btn.classList.contains("cursor-not-allowed")) return;
+      postAction(`/booths/${boothId}/enter/`);
+    });
+  });
+
+  document.querySelectorAll(".exit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const boothId = btn.dataset.boothId;
+      if (btn.classList.contains("cursor-not-allowed")) return;
+      postAction(`/booths/${boothId}/exit/`);
+    });
+  });
+
+  function updateExitButtons(activeBoothIds) {
+    // همه دکمه‌های خروج را غیرفعال می‌کنیم
+    document.querySelectorAll(".exit-btn").forEach(btn => {
+      const boothId = parseInt(btn.dataset.boothId);
+      if (activeBoothIds.includes(boothId)) {
+        // اگر لیدر در این غرفه است، دکمه خروج را فعال می‌کنیم
+        btn.classList.remove("bg-gray-400", "cursor-not-allowed");
+        btn.classList.add("bg-red-600");
+      } else {
+        // اگر لیدر در این غرفه نیست، دکمه خروج را غیرفعال می‌کنیم
+        btn.classList.add("bg-gray-400", "cursor-not-allowed");
+        btn.classList.remove("bg-red-600");
+      }
+    });
+  }
+
+  // WebSocket برای آپدیت لحظه‌ای ظرفیت
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/capacity/`);
+
+  ws.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+    const boothId = data.booth_id;
+    const occupiedSpan = document.getElementById(`occupied-${boothId}`);
+    const remainingSpan = document.getElementById(`remaining-${boothId}`);
+    if (occupiedSpan && remainingSpan) {
+      const total = data.occupied + data.remaining;
+      occupiedSpan.textContent = `اشغال: ${data.occupied} / ${total}`;
+      remainingSpan.textContent = `باقی‌مانده: ${data.remaining}`;
+    }
+
+    const enterBtn = document.querySelector(`.enter-btn[data-booth-id="${boothId}"]`);
+    if (enterBtn) {
+      if (data.remaining <= 0) {
+        enterBtn.classList.add("bg-gray-400", "cursor-not-allowed");
+        enterBtn.classList.remove("bg-green-600");
+      } else {
+        enterBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
+        enterBtn.classList.add("bg-green-600");
+      }
+    }
+  };
+
+  // Polling: هر ۲ ثانیه وضعیت حضور لیدر را چک می‌کنیم
+  async function pollLeaderStatus() {
+    try {
+      const response = await fetch("/leader/api/status/", {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      if (data.active_booth_ids && Array.isArray(data.active_booth_ids)) {
+        updateExitButtons(data.active_booth_ids);
+      }
+    } catch (e) {
+      // در صورت خطا، سکوت می‌کنیم
+    }
+  }
+
+  // شروع polling
+  setInterval(pollLeaderStatus, 2000);
+  // یک‌بار هم فوراً اجرا می‌کنیم
+  pollLeaderStatus();
+</script>
+</body>
+</html>
+

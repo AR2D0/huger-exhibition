@@ -1,0 +1,8 @@
+# .gitignore example
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+db.sqlite3  # اگر داده واقعی داره، این رو اضافه کن تا کامیت نشه
+.venv/  # اگر می‌خوای .venv رو کامیت کنی، این خط رو کامنت کن یا حذف کن
