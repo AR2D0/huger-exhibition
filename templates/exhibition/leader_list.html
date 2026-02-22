@@ -5,110 +5,125 @@
   <meta charset="UTF-8">
   <title>مدیریت لیدرها</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <div class="max-w-4xl mx-auto py-6">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">مدیریت لیدرها</h1>
-      <div class="space-x-2 space-x-reverse">
-        <a href="/exhibition-admin/dashboard/" class="px-4 py-2 bg-gray-600 text-white rounded text-sm">
+<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-vazirmatn">
+  <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <h1 class="text-2xl md:text-3xl font-bold">
+        مدیریت لیدرها
+        {% if user.last_name %}
+          ({{ user.last_name }} 🙋‍♂️)
+        {% elif user.first_name %}
+          ({{ user.first_name }} 🙋‍♂️)
+        {% else %}
+          ({{ user.username }} 🙋‍♂️)
+        {% endif %}
+      </h1>
+      
+      <div class="flex flex-wrap items-center gap-3">
+        <a href="/exhibition-admin/dashboard/" 
+           class="px-5 py-2.5 bg-[#982598] hover:bg-[#E491C9] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
           بازگشت به داشبورد
         </a>
-        <button id="add-leader-btn" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
+        <button id="add-leader-btn" 
+                class="px-5 py-2.5 bg-[#E491C9] hover:bg-[#982598] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
           افزودن لیدر جدید
         </button>
       </div>
     </div>
 
-    <div id="alert-area" class="mb-3"></div>
+    <div id="alert-area" class="mb-6"></div>
 
-    <div class="bg-white shadow rounded overflow-hidden">
-      <table class="w-full">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="px-4 py-3 text-right text-sm font-semibold">نام کاربری</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">وضعیت</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">حضور فعال</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold">عملیات</th>
-          </tr>
-        </thead>
-        <tbody id="leaders-table-body">
-          {% for leader in leaders %}
-            <tr class="border-b" data-leader-id="{{ leader.id }}">
-              <td class="px-4 py-3 text-sm">{{ leader.username }}</td>
-              <td class="px-4 py-3 text-sm">
-                {% if leader.is_active %}
-                  <span class="text-green-600">فعال</span>
-                {% else %}
-                  <span class="text-red-600">غیرفعال</span>
-                {% endif %}
-              </td>
-              <td class="px-4 py-3 text-sm">
-                {% if leader.active_visits > 0 %}
-                  <span class="text-blue-600">{{ leader.active_visits }} غرفه</span>
-                {% else %}
-                  <span class="text-gray-400">هیچ</span>
-                {% endif %}
-              </td>
-              <td class="px-4 py-3 text-sm">
-                <div class="flex space-x-2 space-x-reverse">
-                  <button
-                    data-leader-id="{{ leader.id }}"
-                    data-username="{{ leader.username }}"
-                    class="edit-btn px-2 py-1 bg-yellow-500 text-white rounded text-xs">
-                    ویرایش
-                  </button>
-                  <button
-                    data-leader-id="{{ leader.id }}"
-                    data-username="{{ leader.username }}"
-                    class="reset-password-btn px-2 py-1 bg-green-500 text-white rounded text-xs">
-                    ریست رمز
-                  </button>
-                  <button
-                    data-leader-id="{{ leader.id }}"
-                    data-username="{{ leader.username }}"
-                    class="delete-btn px-2 py-1 bg-red-500 text-white rounded text-xs">
-                    حذف
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {% empty %}
+    <div class="bg-[#1E1F3D] rounded-3xl shadow-2xl overflow-hidden border border-[#982598]/20">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-max text-right">
+          <thead class="bg-[#15173D]/80">
             <tr>
-              <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-                هیچ لیدری ثبت نشده است.
-              </td>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">نام کاربری</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">وضعیت</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">حضور فعال</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">عملیات</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="leaders-table-body">
+            {% for leader in leaders %}
+              <tr class="border-b border-[#982598]/10 hover:bg-[#15173D]/50 transition-all duration-300" data-leader-id="{{ leader.id }}">
+                <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">{{ leader.username }}</td>
+                <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
+                  {% if leader.is_active %}
+                    <span class="text-green-400">فعال</span>
+                  {% else %}
+                    <span class="text-red-400">غیرفعال</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
+                  {% if leader.active_visits > 0 %}
+                    <span class="text-[#E491C9]">{{ leader.active_visits }} غرفه</span>
+                  {% else %}
+                    <span class="text-[#F1E9E9]/50">هیچ</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
+                  <div class="flex flex-wrap gap-2 md:gap-3">
+                    <button
+                      data-leader-id="{{ leader.id }}"
+                      data-username="{{ leader.username }}"
+                      class="edit-btn px-3 py-1.5 md:px-4 md:py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl text-xs md:text-sm transition-all duration-300 hover:scale-105">
+                      ویرایش
+                    </button>
+                    <button
+                      data-leader-id="{{ leader.id }}"
+                      data-username="{{ leader.username }}"
+                      class="reset-password-btn px-3 py-1.5 md:px-4 md:py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs md:text-sm transition-all duration-300 hover:scale-105">
+                      ریست رمز
+                    </button>
+                    <button
+                      data-leader-id="{{ leader.id }}"
+                      data-username="{{ leader.username }}"
+                      class="delete-btn px-3 py-1.5 md:px-4 md:py-2 bg-red-700 hover:bg-red-600 text-white rounded-xl text-xs md:text-sm transition-all duration-300 hover:scale-105">
+                      حذف
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="px-6 py-12 text-center text-[#F1E9E9]/50 text-base md:text-lg">
+                  هیچ لیدری ثبت نشده است.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Modal برای افزودن/ویرایش لیدر -->
-  <div id="leader-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-      <h2 id="modal-title" class="text-xl font-bold mb-4">افزودن لیدر جدید</h2>
-      <form id="leader-form">
+  <!-- Modal افزودن/ویرایش لیدر -->
+  <div id="leader-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-[#1E1F3D] rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#982598]/30 shadow-2xl">
+      <h2 id="modal-title" class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-[#F1E9E9]">افزودن لیدر جدید</h2>
+      <form id="leader-form" class="space-y-5 md:space-y-6">
         <input type="hidden" id="leader-id-input" name="leader_id" value="">
-        <div class="mb-4">
-          <label class="block text-sm mb-1">نام کاربری</label>
+        <div>
+          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-2 md:mb-3">نام کاربری</label>
           <input type="text" id="username-input" name="username" required
-                 class="w-full border rounded px-3 py-2 text-sm">
+                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300">
         </div>
-        <div class="mb-4">
-          <label class="block text-sm mb-1">رمز عبور</label>
+        <div>
+          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-2 md:mb-3">رمز عبور</label>
           <input type="password" id="password-input" name="password"
-                 class="w-full border rounded px-3 py-2 text-sm"
+                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
                  placeholder="برای ویرایش خالی بگذارید">
         </div>
-        <div class="flex space-x-2 space-x-reverse">
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded text-sm">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button type="submit" class="flex-1 px-6 py-3.5 bg-[#982598] hover:bg-[#E491C9] text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(228,145,201,0.5)]">
             ذخیره
           </button>
-          <button type="button" id="cancel-modal-btn" class="flex-1 px-4 py-2 bg-gray-400 text-white rounded text-sm">
+          <button type="button" id="cancel-modal-btn" class="flex-1 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105">
             انصراف
           </button>
         </div>
@@ -116,23 +131,23 @@
     </div>
   </div>
 
-  <!-- Modal برای ریست رمز -->
-  <div id="reset-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-      <h2 class="text-xl font-bold mb-4">ریست رمز عبور</h2>
-      <p class="text-sm text-gray-600 mb-4" id="reset-username-text"></p>
-      <form id="reset-password-form">
+  <!-- Modal ریست رمز -->
+  <div id="reset-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-[#1E1F3D] rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#982598]/30 shadow-2xl">
+      <h2 class="text-2xl md:text-3xl font-bold mb-6 text-[#F1E9E9]">ریست رمز عبور</h2>
+      <p class="text-base md:text-lg text-[#F1E9E9]/80 mb-8" id="reset-username-text"></p>
+      <form id="reset-password-form" class="space-y-6">
         <input type="hidden" id="reset-leader-id-input" name="leader_id" value="">
-        <div class="mb-4">
-          <label class="block text-sm mb-1">رمز عبور جدید</label>
+        <div>
+          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-3">رمز عبور جدید</label>
           <input type="password" id="reset-password-input" name="password" required
-                 class="w-full border rounded px-3 py-2 text-sm">
+                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300">
         </div>
-        <div class="flex space-x-2 space-x-reverse">
-          <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded text-sm">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button type="submit" class="flex-1 px-6 py-3.5 bg-green-700 hover:bg-green-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(46,204,113,0.5)]">
             ذخیره
           </button>
-          <button type="button" id="cancel-reset-btn" class="flex-1 px-4 py-2 bg-gray-400 text-white rounded text-sm">
+          <button type="button" id="cancel-reset-btn" class="flex-1 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105">
             انصراف
           </button>
         </div>
@@ -152,10 +167,10 @@
 
   function showAlert(message, type="error") {
     const alertArea = document.getElementById("alert-area");
-    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
-    const text = type === "error" ? "text-red-700" : "text-green-700";
+    const bg = type === "error" ? "bg-red-900/40" : "bg-green-900/40";
+    const text = type === "error" ? "text-red-300" : "text-green-300";
     alertArea.innerHTML = `
-      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+      <div class="${bg} ${text} px-5 py-3 rounded-2xl text-sm mb-6 border border-red-500/30">
         ${message}
       </div>
     `;
@@ -181,7 +196,6 @@
     leaderModal.classList.add("hidden");
   });
 
-  // دکمه‌های ویرایش
   document.querySelectorAll(".edit-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const leaderId = btn.dataset.leaderId;
@@ -195,7 +209,6 @@
     });
   });
 
-  // Submit فرم افزودن/ویرایش
   leaderForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const leaderId = document.getElementById("leader-id-input").value;
@@ -283,7 +296,6 @@
     }
   });
 
-  // دکمه‌های حذف
   document.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const leaderId = btn.dataset.leaderId;

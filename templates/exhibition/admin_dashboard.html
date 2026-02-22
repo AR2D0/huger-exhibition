@@ -5,67 +5,100 @@
   <meta charset="UTF-8">
   <title>پنل مدیریتی غرفه‌ها</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.fontcdn.ir/Font/Persian/Shabnam/Shabnam.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <style>
+    body, * { font-family: 'Shabnam', sans-serif !important; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-shabnam">
   <script>
-    // اطمینان از رفرش صفحه بعد از لاگین
     if (sessionStorage.getItem('just_logged_in') === 'true') {
       sessionStorage.removeItem('just_logged_in');
       window.location.reload();
     }
   </script>
-  <div class="max-w-4xl mx-auto py-6">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">داشبورد مدیریت غرفه‌ها</h1>
-      <a href="/exhibition-admin/leaders/" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-        مدیریت لیدرها
-      </a>
+  <div class="max-w-6xl mx-auto py-10 px-6">
+    <div class="flex justify-between items-center mb-10 flex-wrap gap-6">
+      <h1 class="text-3xl md:text-4xl font-bold">
+        داشبورد مدیریت غرفه‌ها
+        {% if user.last_name %}
+          ({{ user.last_name }} 🙋‍♂️)
+        {% elif user.first_name %}
+          ({{ user.first_name }} 🙋‍♂️)
+        {% else %}
+          ({{ user.username }} 🙋‍♂️)
+        {% endif %}
+      </h1>
+      
+      <div class="flex items-center space-x-5 space-x-reverse">
+        <a href="/exhibition-admin/leaders/" 
+           class="px-6 py-3 bg-[#982598] hover:bg-[#E491C9] text-white rounded-2xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(228,145,201,0.5)]">
+          مدیریت لیدرها
+        </a>
+        
+        {% if user.is_authenticated %}
+          <form action="{% url 'logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white rounded-2xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]">
+              خروج
+            </button>
+          </form>
+        {% endif %}
+      </div>
     </div>
 
-    <div id="alert-area" class="mb-3"></div>
+    <div id="alert-area" class="mb-6"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for item in booth_status %}
-        <div id="admin-booth-card-{{ item.booth.id }}" class="bg-white shadow rounded p-4">
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-semibold text-lg">{{ item.booth.name }}</span>
-            <span class="text-sm text-gray-600">
+        <div id="admin-booth-card-{{ item.booth.id }}"
+             class="bg-[#1E1F3D] rounded-3xl shadow-xl p-6 border border-[#982598]/20 hover:border-[#E491C9]/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(228,145,201,0.3)] hover:scale-[1.02]">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-bold text-[#E491C9]">
+              {{ item.booth.name }}
+            </span>
+            <span class="text-sm text-[#F1E9E9]/70">
               ظرفیت کل: {{ item.booth.max_groups }}
             </span>
           </div>
 
-          <div class="flex justify-between items-center mb-2">
-            <span id="admin-occupied-{{ item.booth.id }}" class="text-sm">
+          <div class="flex justify-between items-center mb-4 text-sm">
+            <span id="admin-occupied-{{ item.booth.id }}">
               اشغال: {{ item.occupied }} / {{ item.booth.max_groups }}
             </span>
-            <span id="admin-remaining-{{ item.booth.id }}" class="text-sm">
+            <span id="admin-remaining-{{ item.booth.id }}">
               باقی‌مانده: {{ item.remaining }}
             </span>
           </div>
 
           <div>
-            <h3 class="font-semibold text-sm mb-1">لیدرهای حاضر:</h3>
-            <ul id="admin-leaders-{{ item.booth.id }}" class="space-y-1 text-sm">
+            <h3 class="text-base font-semibold text-[#982598] mb-3">لیدرهای حاضر:</h3>
+            <ul id="admin-leaders-{{ item.booth.id }}" class="space-y-2 text-sm">
               {% for leader in item.leaders %}
-                <li class="flex justify-between items-center border-b pb-1">
-                  <span>{{ leader.username }}</span>
+                <li class="flex justify-between items-center bg-[#15173D]/50 p-3 rounded-2xl border border-[#982598]/10 hover:border-[#E491C9]/40 transition-all duration-300">
+                  <span class="text-[#F1E9E9]">{{ leader.username }}</span>
                   <button
                     data-booth-id="{{ item.booth.id }}"
                     data-user-id="{{ leader.id }}"
-                    class="kick-btn text-xs px-2 py-1 rounded bg-red-500 text-white">
+                    class="kick-btn text-xs px-4 py-2 bg-red-700 hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105">
                     اخراج
                   </button>
                 </li>
               {% empty %}
-                <li class="text-gray-500 text-sm">هیچ لیدری در این غرفه نیست.</li>
+                <li class="text-[#F1E9E9]/50 text-center py-3">هیچ لیدری در این غرفه نیست.</li>
               {% endfor %}
             </ul>
           </div>
         </div>
       {% endfor %}
     </div>
+
+    <p class="text-center text-[#F1E9E9]/50 text-sm mt-12">
+      DEVELOPED BY DEVSHIDO
+    </p>
   </div>
 
 <script>
@@ -80,10 +113,10 @@
 
   function showAlert(message, type="error") {
     const alertArea = document.getElementById("alert-area");
-    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
-    const text = type === "error" ? "text-red-700" : "text-green-700";
+    const bg = type === "error" ? "bg-red-900/40" : "bg-green-900/40";
+    const text = type === "error" ? "text-red-300" : "text-green-300";
     alertArea.innerHTML = `
-      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+      <div class="${bg} ${text} px-5 py-3 rounded-2xl text-sm mb-6 border border-red-500/30">
         ${message}
       </div>
     `;
@@ -141,12 +174,10 @@
           const li = document.createElement("li");
           li.className = "flex justify-between items-center border-b pb-1";
           
-          // اگر leader یک object است (از WebSocket یا API) با id و username
           const username = typeof leader === "string" ? leader : leader.username;
           const leaderId = typeof leader === "object" && leader.id ? leader.id : null;
           
           if (leaderId) {
-            // دکمه اخراج را می‌سازیم
             li.innerHTML = `
               <span>${username}</span>
               <button
@@ -156,7 +187,6 @@
                 اخراج
               </button>
             `;
-            // event listener را دوباره اضافه می‌کنیم
             const kickBtn = li.querySelector(".kick-btn");
             if (kickBtn) {
               kickBtn.addEventListener("click", () => {
@@ -165,7 +195,6 @@
               });
             }
           } else {
-            // اگر id نداریم (fallback قدیمی)، فقط username را نشان می‌دهیم
             li.innerHTML = `
               <span>${username}</span>
               <span class="text-xs text-gray-400">آنلاین</span>
@@ -178,46 +207,59 @@
     }
   }
 
-  // WebSocket (اگر Redis/WS در دسترس باشد)
   try {
     const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
     const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/capacity/`);
 
+    ws.onopen = function () {
+      console.log("WebSocket ادمین متصل شد");
+    };
+
+    ws.onerror = function (error) {
+      console.error("خطای WebSocket ادمین:", error);
+    };
+
     ws.onmessage = function (event) {
-      const data = JSON.parse(event.data);
+      console.log("پیام دریافتی ادمین از WebSocket:", event.data);
+
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch (e) {
+        console.error("خطا در پارس JSON در ادمین:", e);
+        return;
+      }
+
+      if (message.type !== "capacity.update") {
+        console.log("پیام ناشناخته در ادمین:", message);
+        return;
+      }
+
       applySnapshotFromBooth({
-        id: data.booth_id,
-        occupied: data.occupied,
-        remaining: data.remaining,
-        leaders: data.leaders,
+        id: message.booth_id,
+        occupied: message.occupied,
+        remaining: message.remaining,
+        leaders: message.leaders || [],
       });
     };
   } catch (e) {
-    // اگر WebSocket در دسترس نبود، صرفاً از polling استفاده می‌کنیم
+    console.error("خطا در راه‌اندازی WebSocket ادمین:", e);
   }
 
-  // Polling fallback: هر ۱.۵ ثانیه وضعیت را از سرور می‌گیریم
   async function pollStatus() {
     try {
       const response = await fetch("/exhibition-admin/api/booth-status/", {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       });
-      if (!response.ok) {
-        return;
-      }
+      if (!response.ok) return;
       const payload = await response.json();
       if (payload.booths && Array.isArray(payload.booths)) {
         payload.booths.forEach(applySnapshotFromBooth);
       }
-    } catch (e) {
-      // در صورت خطا، سکوت می‌کنیم تا رابط کاربری کاربر را اذیت نکند
-    }
+    } catch (e) {}
   }
 
   setInterval(pollStatus, 1500);
 </script>
 </body>
 </html>
-

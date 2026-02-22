@@ -35,10 +35,20 @@ def is_exhibition_admin(user) -> bool:
 @login_required
 def redirect_after_login(request: HttpRequest) -> HttpResponse:
     user = request.user
+    
+    # اولویت اول: اگر superuser باشد → همیشه به Django Admin کلاسیک برود
+    if user.is_superuser:
+        return redirect("/admin/")  # یا redirect("admin:index")
+    
+    # اگر در گروه exhibition_admins باشد → به داشبورد سفارشی
     if is_exhibition_admin(user):
         return redirect("admin_dashboard")
+    
+    # اگر leader باشد
     if is_leader(user):
         return redirect("leader_dashboard")
+    
+    # بقیه کاربرها → به صفحه لاگین
     return redirect("login")
 
 
@@ -81,6 +91,26 @@ def leader_status_api(request: HttpRequest) -> JsonResponse:
     ).values_list("booth_id", flat=True)
     
     return JsonResponse({"active_booth_ids": list(active_visits)})
+
+
+@login_required
+@user_passes_test(is_leader)
+def all_booths_status_api(request: HttpRequest) -> JsonResponse:
+    """
+    API جدید برای polling: وضعیت فعلی همه غرفه‌ها را برای لیدرها برمی‌گرداند
+    """
+    booths = Booth.objects.all().order_by("id")
+    result = []
+    for booth in booths:
+        occupied = BoothVisit.objects.filter(booth=booth, is_active=True).count()
+        remaining = max(booth.max_groups - occupied, 0)
+        result.append({
+            "id": booth.id,
+            "occupied": occupied,
+            "remaining": remaining,
+            "max": booth.max_groups,
+        })
+    return JsonResponse({"booths": result})
 
 
 def _broadcast_capacity_update(booth_id: int) -> None:
@@ -298,7 +328,6 @@ def leader_list(request: HttpRequest) -> HttpResponse:
     leaders_group = Group.objects.get(name="leaders")
     leaders = leaders_group.user_set.all().order_by("username")
     
-    # برای هر لیدر، تعداد حضورهای فعال را می‌شماریم
     leader_data = []
     for leader in leaders:
         active_visits = BoothVisit.objects.filter(leader=leader, is_active=True).count()
@@ -365,7 +394,6 @@ def leader_edit(request: HttpRequest, user_id: int) -> HttpResponse | JsonRespon
                 status=400,
             )
         
-        # اگر نام کاربری تغییر کرده و تکراری است
         if username != leader.username and User.objects.filter(username=username).exists():
             return JsonResponse(
                 {"error": "این نام کاربری قبلاً استفاده شده است."},
@@ -399,7 +427,6 @@ def leader_delete(request: HttpRequest, user_id: int) -> JsonResponse:
             status=400,
         )
     
-    # اگر لیدر در حال حاضر در غرفه‌ای حضور دارد، اول او را از همه غرفه‌ها خارج می‌کنیم
     active_visits = BoothVisit.objects.filter(leader=leader, is_active=True)
     booth_ids_to_update = set()
     for visit in active_visits:
@@ -408,7 +435,6 @@ def leader_delete(request: HttpRequest, user_id: int) -> JsonResponse:
         visit.exited_at = timezone.now()
         visit.save()
     
-    # Broadcast برای همه غرفه‌هایی که لیدر از آن‌ها خارج شد
     for booth_id in booth_ids_to_update:
         _safe_broadcast_capacity_update(booth_id=booth_id)
     
@@ -444,4 +470,3 @@ def leader_reset_password(request: HttpRequest, user_id: int) -> JsonResponse:
     leader.save()
     
     return JsonResponse({"success": True}, status=200)
-

@@ -12,6 +12,11 @@ urlpatterns = [
         exhibition_views.leader_status_api,
         name="leader_status_api",
     ),
+    path(
+        "leader/api/all-booths-status/",
+        exhibition_views.all_booths_status_api,
+        name="all_booths_status_api",
+    ),
     path("exhibition-admin/dashboard/", exhibition_views.admin_dashboard, name="admin_dashboard"),
     path(
         "exhibition-admin/api/booth-status/",
@@ -60,4 +65,3 @@ urlpatterns = [
         name="leader_reset_password",
     ),
 ]
-

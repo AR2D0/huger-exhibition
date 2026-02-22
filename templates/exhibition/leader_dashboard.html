@@ -5,62 +5,87 @@
   <meta charset="UTF-8">
   <title>داشبورد لیدر</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-vazirmatn">
   <script>
-    // اطمینان از رفرش صفحه بعد از لاگین
     if (sessionStorage.getItem('just_logged_in') === 'true') {
       sessionStorage.removeItem('just_logged_in');
       window.location.reload();
     }
   </script>
-  <div class="max-w-md mx-auto py-4">
-    <h1 class="text-xl font-bold text-center mb-4">مدیریت ظرفیت غرفه‌ها</h1>
+  <div class="max-w-3xl mx-auto py-10 px-6">
+    <div class="flex justify-between items-center mb-10 flex-wrap gap-6">
+      <h1 class="text-3xl md:text-4xl font-bold">
+        مدیریت غرفه‌ها
+        {% if user.last_name %}
+          ({{ user.last_name }} 🙋‍♂️)
+        {% elif user.first_name %}
+          ({{ user.first_name }} 🙋‍♂️)
+        {% else %}
+          ({{ user.username }} 🙋‍♂️)
+        {% endif %}
+      </h1>
+      
+      {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post" class="inline">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white rounded-2xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]">
+            خروج
+          </button>
+        </form>
+      {% endif %}
+    </div>
 
-    <div id="alert-area" class="mb-3"></div>
+    <div id="alert-area" class="mb-6"></div>
 
-    <div class="space-y-3">
+    <div class="space-y-6">
       {% for booth in booths %}
         <div id="booth-card-{{ booth.id }}"
-             class="bg-white shadow rounded p-3 flex flex-col">
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-semibold text-lg">
+             class="bg-[#1E1F3D] rounded-3xl shadow-xl p-6 border border-[#982598]/20 hover:border-[#E491C9]/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(228,145,201,0.3)] hover:scale-[1.02]">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-bold text-[#E491C9]">
               {{ booth.name }}
             </span>
-            <span class="text-sm text-gray-600">
+            <span class="text-sm text-[#F1E9E9]/70">
               ظرفیت: {{ booth.max }}
             </span>
           </div>
 
-          <div class="flex justify-between items-center mb-2">
-            <span id="occupied-{{ booth.id }}" class="text-sm">
+          <div class="flex justify-between items-center mb-4 text-sm">
+            <span id="occupied-{{ booth.id }}">
               اشغال: {{ booth.occupied }} / {{ booth.max }}
             </span>
-            <span id="remaining-{{ booth.id }}" class="text-sm">
+            <span id="remaining-{{ booth.id }}">
               باقی‌مانده: {{ booth.remaining }}
             </span>
           </div>
 
-          <div class="flex space-x-2 space-x-reverse mt-2">
+          <div class="flex space-x-4 space-x-reverse">
             <button
               data-booth-id="{{ booth.id }}"
-              class="enter-btn flex-1 px-3 py-2 rounded text-white text-sm
-                     {% if booth.remaining <= 0 %}bg-gray-400 cursor-not-allowed{% else %}bg-green-600{% endif %}">
+              class="enter-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
+                     {% if booth.remaining <= 0 %}bg-gray-700 cursor-not-allowed{% else %}bg-[#982598] hover:bg-[#E491C9] hover:shadow-[0_0_25px_rgba(228,145,201,0.5)]{% endif %}">
               ورود
             </button>
 
             <button
               data-booth-id="{{ booth.id }}"
-              class="exit-btn flex-1 px-3 py-2 rounded text-white text-sm
-                     {% if booth.is_user_inside %}bg-red-600{% else %}bg-gray-400 cursor-not-allowed{% endif %}">
+              class="exit-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
+                     {% if booth.is_user_inside %}bg-red-700 hover:bg-red-600 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]{% else %}bg-gray-700 cursor-not-allowed{% endif %}">
               خروج
             </button>
           </div>
         </div>
       {% endfor %}
     </div>
+
+    <p class="text-center text-[#F1E9E9]/50 text-sm mt-12">
+      DEVELOPED BY DEVSHIDO
+    </p>
   </div>
 
 <script>
@@ -71,15 +96,14 @@
     return "";
   }
 
-  // روش استاندارد Django برای CSRF: خواندن از کوکی csrftoken
   const csrftoken = getCookie("csrftoken");
 
   function showAlert(message, type="error") {
     const alertArea = document.getElementById("alert-area");
-    const bg = type === "error" ? "bg-red-100" : "bg-green-100";
-    const text = type === "error" ? "text-red-700" : "text-green-700";
+    const bg = type === "error" ? "bg-red-900/40" : "bg-green-900/40";
+    const text = type === "error" ? "text-red-300" : "text-green-300";
     alertArea.innerHTML = `
-      <div class="${bg} ${text} px-3 py-2 rounded text-sm mb-2">
+      <div class="${bg} ${text} px-5 py-3 rounded-2xl text-sm mb-6 border border-red-500/30">
         ${message}
       </div>
     `;
@@ -96,15 +120,14 @@
         },
       });
 
-      // بدنه‌ی پاسخ برای ما مهم نیست؛ فقط اگر خطای HTTP بود پیام نشان می‌دهیم
       if (!response.ok) {
-        // ممکن است پاسخ JSON نباشد (مثلاً HTML صفحه خطا). پیام عمومی نشان می‌دهیم.
         showAlert("در انجام عملیات خطایی رخ داد. لطفاً دوباره تلاش کنید.");
         return;
       }
 
-      // در حالت موفق، بدون وابستگی به JSON، صفحه را رفرش می‌کنیم
-      window.location.reload();
+      pollAllBoothsStatus();
+      pollLeaderStatus();
+      showAlert("عملیات با موفقیت انجام شد.", "success");
     } catch (e) {
       showAlert("مشکلی در ارتباط با سرور رخ داد.");
     }
@@ -127,73 +150,72 @@
   });
 
   function updateExitButtons(activeBoothIds) {
-    // همه دکمه‌های خروج را غیرفعال می‌کنیم
     document.querySelectorAll(".exit-btn").forEach(btn => {
       const boothId = parseInt(btn.dataset.boothId);
       if (activeBoothIds.includes(boothId)) {
-        // اگر لیدر در این غرفه است، دکمه خروج را فعال می‌کنیم
-        btn.classList.remove("bg-gray-400", "cursor-not-allowed");
-        btn.classList.add("bg-red-600");
+        btn.classList.remove("bg-gray-700", "cursor-not-allowed");
+        btn.classList.add("bg-red-700");
       } else {
-        // اگر لیدر در این غرفه نیست، دکمه خروج را غیرفعال می‌کنیم
-        btn.classList.add("bg-gray-400", "cursor-not-allowed");
-        btn.classList.remove("bg-red-600");
+        btn.classList.add("bg-gray-700", "cursor-not-allowed");
+        btn.classList.remove("bg-red-700");
       }
     });
   }
 
-  // WebSocket برای آپدیت لحظه‌ای ظرفیت
-  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/capacity/`);
+  async function pollAllBoothsStatus() {
+    try {
+      const response = await fetch("/leader/api/all-booths-status/", {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      if (!response.ok) return;
 
-  ws.onmessage = function (event) {
-    const data = JSON.parse(event.data);
-    const boothId = data.booth_id;
-    const occupiedSpan = document.getElementById(`occupied-${boothId}`);
-    const remainingSpan = document.getElementById(`remaining-${boothId}`);
-    if (occupiedSpan && remainingSpan) {
-      const total = data.occupied + data.remaining;
-      occupiedSpan.textContent = `اشغال: ${data.occupied} / ${total}`;
-      remainingSpan.textContent = `باقی‌مانده: ${data.remaining}`;
+      const payload = await response.json();
+      if (!payload.booths || !Array.isArray(payload.booths)) return;
+
+      payload.booths.forEach(booth => {
+        const boothId = booth.id;
+        const occupiedSpan = document.getElementById(`occupied-${boothId}`);
+        const remainingSpan = document.getElementById(`remaining-${boothId}`);
+
+        if (occupiedSpan && remainingSpan) {
+          const total = booth.occupied + booth.remaining;
+          occupiedSpan.textContent = `اشغال: ${booth.occupied} / ${total}`;
+          remainingSpan.textContent = `باقی‌مانده: ${booth.remaining}`;
+        }
+
+        const enterBtn = document.querySelector(`.enter-btn[data-booth-id="${boothId}"]`);
+        if (enterBtn) {
+          if (booth.remaining <= 0) {
+            enterBtn.classList.add("bg-gray-700", "cursor-not-allowed");
+            enterBtn.classList.remove("bg-[#982598]");
+          } else {
+            enterBtn.classList.remove("bg-gray-700", "cursor-not-allowed");
+            enterBtn.classList.add("bg-[#982598]");
+          }
+        }
+      });
+    } catch (e) {
+      console.log("خطا در polling وضعیت غرفه‌ها:", e);
     }
+  }
 
-    const enterBtn = document.querySelector(`.enter-btn[data-booth-id="${boothId}"]`);
-    if (enterBtn) {
-      if (data.remaining <= 0) {
-        enterBtn.classList.add("bg-gray-400", "cursor-not-allowed");
-        enterBtn.classList.remove("bg-green-600");
-      } else {
-        enterBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
-        enterBtn.classList.add("bg-green-600");
-      }
-    }
-  };
-
-  // Polling: هر ۲ ثانیه وضعیت حضور لیدر را چک می‌کنیم
   async function pollLeaderStatus() {
     try {
       const response = await fetch("/leader/api/status/", {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
+        headers: { "X-Requested-With": "XMLHttpRequest" },
       });
-      if (!response.ok) {
-        return;
-      }
+      if (!response.ok) return;
       const data = await response.json();
       if (data.active_booth_ids && Array.isArray(data.active_booth_ids)) {
         updateExitButtons(data.active_booth_ids);
       }
-    } catch (e) {
-      // در صورت خطا، سکوت می‌کنیم
-    }
+    } catch (e) {}
   }
 
-  // شروع polling
+  setInterval(pollAllBoothsStatus, 3000);
   setInterval(pollLeaderStatus, 2000);
-  // یک‌بار هم فوراً اجرا می‌کنیم
+  pollAllBoothsStatus();
   pollLeaderStatus();
 </script>
 </body>
 </html>
-

@@ -4,30 +4,36 @@
   <meta charset="UTF-8">
   <title>ورود به سامانه</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-sm bg-white shadow-md rounded px-6 py-6">
-    <h1 class="text-xl font-bold mb-4 text-center">ورود لیدر / ادمین</h1>
+<body class="bg-[#15173D] min-h-screen flex items-center justify-center font-vazirmatn">
+  <div class="w-full max-w-md bg-[#1E1F3D] rounded-3xl shadow-2xl p-10 border border-[#982598]/30 transition-all duration-500 hover:shadow-[0_0_50px_rgba(228,145,201,0.4)] hover:scale-[1.02]">
+    <h1 class="text-3xl font-bold text-center mb-10 text-[#F1E9E9]">
+      ورود به پنل
+    </h1>
 
     {% if form.errors %}
-      <div class="bg-red-100 text-red-700 px-3 py-2 rounded text-sm mb-3">
+      <div class="bg-red-900/40 text-red-300 px-6 py-4 rounded-2xl text-center mb-8 border border-red-500/30">
         نام کاربری یا رمز عبور اشتباه است.
       </div>
     {% endif %}
 
-    <form method="post" action="" id="login-form">
+    <form method="post" action="" id="login-form" class="space-y-8">
       {% csrf_token %}
-      <div class="mb-3">
-        <label class="block text-sm mb-1">نام کاربری</label>
+
+      <div>
+        <label class="block text-[#E491C9] text-lg font-medium mb-3">نام کاربری</label>
         <input type="text" name="username"
-               class="w-full border rounded px-3 py-2 text-sm"
+               class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-6 py-4 text-[#F1E9E9] text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
                autofocus required>
       </div>
-      <div class="mb-4">
-        <label class="block text-sm mb-1">رمز عبور</label>
+
+      <div>
+        <label class="block text-[#E491C9] text-lg font-medium mb-3">رمز عبور</label>
         <input type="password" name="password"
-               class="w-full border rounded px-3 py-2 text-sm"
+               class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-6 py-4 text-[#F1E9E9] text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
                required>
       </div>
 
@@ -36,18 +42,21 @@
       {% endif %}
 
       <button type="submit"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded">
+              class="w-full bg-[#982598] hover:bg-[#E491C9] text-white text-xl font-bold py-4 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(228,145,201,0.6)] shadow-xl">
         ورود
       </button>
+
+      <p class="text-center text-[#F1E9E9]/60 text-sm mt-8">
+        DEVELOPED BY DEVSHIDO
+      </p>
     </form>
   </div>
 
 <script>
-  // بعد از submit فرم، flag را set می‌کنیم تا بعد از redirect صفحه رفرش شود
   document.getElementById('login-form').addEventListener('submit', function() {
     sessionStorage.setItem('just_logged_in', 'true');
   });
 </script>
+
 </body>
 </html>
-
