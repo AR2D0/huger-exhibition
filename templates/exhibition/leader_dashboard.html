@@ -5,11 +5,14 @@
   <meta charset="UTF-8">
   <title>داشبورد لیدر</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
+  <link href="https://cdn.fontcdn.ir/Font/Persian/Shabnam/Shabnam.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <style>
+    body, * { font-family: 'Shabnam', sans-serif !important; }
+  </style>
 </head>
-<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-vazirmatn">
+<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-shabnam">
   <script>
     if (sessionStorage.getItem('just_logged_in') === 'true') {
       sessionStorage.removeItem('just_logged_in');
@@ -17,28 +20,28 @@
     }
   </script>
   <div class="max-w-3xl mx-auto py-10 px-6">
-    <div class="flex justify-between items-center mb-10 flex-wrap gap-6">
-      <h1 class="text-3xl md:text-4xl font-bold">
-        مدیریت غرفه‌ها
-        {% if user.last_name %}
-          ({{ user.last_name }} 🙋‍♂️)
-        {% elif user.first_name %}
-          ({{ user.first_name }} 🙋‍♂️)
-        {% else %}
-          ({{ user.username }} 🙋‍♂️)
-        {% endif %}
-      </h1>
-      
-      {% if user.is_authenticated %}
-        <form action="{% url 'logout' %}" method="post" class="inline">
-          {% csrf_token %}
-          <button type="submit"
-                  class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white rounded-2xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]">
-            خروج
-          </button>
-        </form>
+  <div class="flex justify-between items-center mb-10 flex-wrap gap-2">
+    <h1 class="text-2xl md:text-3xl font-bold">  <!-- ← اندازه فونت کوچکتر شد -->
+       غرفه ها
+      {% if user.last_name %}
+        ({{ user.last_name }} 🙋‍♂️)
+      {% elif user.first_name %}
+        ({{ user.first_name }} 🙋‍♂️)
+      {% else %}
+        ({{ user.username }} 🙋‍♂️)
       {% endif %}
-    </div>
+    </h1>
+
+    {% if user.is_authenticated %}
+      <form action="{% url 'logout' %}" method="post" class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                class="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white rounded-xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(255,107,107,0.5)]">
+          خروج
+        </button>
+      </form>
+    {% endif %}
+  </div>
 
     <div id="alert-area" class="mb-6"></div>
 

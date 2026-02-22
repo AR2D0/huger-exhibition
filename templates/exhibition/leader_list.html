@@ -5,14 +5,17 @@
   <meta charset="UTF-8">
   <title>مدیریت لیدرها</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
+  <link href="https://cdn.fontcdn.ir/Font/Persian/Shabnam/Shabnam.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <style>
+    body, * { font-family: 'Shabnam', sans-serif !important; }
+  </style>
 </head>
-<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-vazirmatn">
+<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-shabnam">
   <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-      <h1 class="text-2xl md:text-3xl font-bold">
+      <h1 class="text-2xl md:text-2xl font-bold">
         مدیریت لیدرها
         {% if user.last_name %}
           ({{ user.last_name }} 🙋‍♂️)
@@ -22,13 +25,13 @@
           ({{ user.username }} 🙋‍♂️)
         {% endif %}
       </h1>
-      
+
       <div class="flex flex-wrap items-center gap-3">
-        <a href="/exhibition-admin/dashboard/" 
+        <a href="/exhibition-admin/dashboard/"
            class="px-5 py-2.5 bg-[#982598] hover:bg-[#E491C9] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
           بازگشت به داشبورد
         </a>
-        <button id="add-leader-btn" 
+        <button id="add-leader-btn"
                 class="px-5 py-2.5 bg-[#E491C9] hover:bg-[#982598] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
           افزودن لیدر جدید
         </button>
@@ -221,7 +224,7 @@
       formData.append("password", password);
     }
 
-    const url = leaderId 
+    const url = leaderId
       ? `/exhibition-admin/leaders/${leaderId}/edit/`
       : "/exhibition-admin/leaders/create/";
 
@@ -300,7 +303,7 @@
     btn.addEventListener("click", async () => {
       const leaderId = btn.dataset.leaderId;
       const username = btn.dataset.username;
-      
+
       if (!confirm(`آیا مطمئن هستید که می‌خواهید لیدر "${username}" را حذف کنید؟`)) {
         return;
       }

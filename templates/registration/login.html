@@ -2,16 +2,18 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>ورود به سامانه</title>
+  <title>ورود به سایت</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.4/Vazirmatn-font-face.css" rel="stylesheet">
+  <link href="https://cdn.fontcdn.ir/Font/Persian/Shabnam/Shabnam.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  
+  <style>
+    body, * { font-family: 'Shabnam', sans-serif !important; }
+  </style>
 </head>
-<body class="bg-[#15173D] min-h-screen flex items-center justify-center font-vazirmatn">
+<body class="bg-[#15173D] min-h-screen flex items-center justify-center font-shabnam">
   <div class="w-full max-w-md bg-[#1E1F3D] rounded-3xl shadow-2xl p-10 border border-[#982598]/30 transition-all duration-500 hover:shadow-[0_0_50px_rgba(228,145,201,0.4)] hover:scale-[1.02]">
     <h1 class="text-3xl font-bold text-center mb-10 text-[#F1E9E9]">
-      ورود به پنل
+        ورود به پنل کاربری
     </h1>
 
     {% if form.errors %}
@@ -20,7 +22,7 @@
       </div>
     {% endif %}
 
-    <form method="post" action="" id="login-form" class="space-y-8">
+    <form method="post" action="" id="login-form" class="space-y-5">
       {% csrf_token %}
 
       <div>
