@@ -6,21 +6,15 @@ from django.db import transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from .models import Booth, BoothVisit
+from .models import Booth, BoothVisit, LeaderBoothStatus
 
 
 def _safe_broadcast_capacity_update(booth_id: int) -> None:
-    """
-    Broadcast capacity updates via Redis/WebSocket.
-
-    Important: the enter/exit actions must NOT fail if Redis is down.
-    """
     try:
         _broadcast_capacity_update(booth_id=booth_id)
     except Exception:
-        # اگر Redis/Channels در دسترس نبود، عملیات ورود/خروج نباید fail شود.
-        # (در محیط پروداکشن بهتر است اینجا logging اضافه شود.)
         return
 
 
@@ -36,19 +30,15 @@ def is_exhibition_admin(user) -> bool:
 def redirect_after_login(request: HttpRequest) -> HttpResponse:
     user = request.user
     
-    # اولویت اول: اگر superuser باشد → همیشه به Django Admin کلاسیک برود
     if user.is_superuser:
-        return redirect("/admin/")  # یا redirect("admin:index")
+        return redirect("/admin/")
     
-    # اگر در گروه exhibition_admins باشد → به داشبورد سفارشی
     if is_exhibition_admin(user):
         return redirect("admin_dashboard")
     
-    # اگر leader باشد
     if is_leader(user):
         return redirect("leader_dashboard")
     
-    # بقیه کاربرها → به صفحه لاگین
     return redirect("login")
 
 
@@ -83,9 +73,6 @@ def leader_dashboard(request: HttpRequest) -> HttpResponse:
 @login_required
 @user_passes_test(is_leader)
 def leader_status_api(request: HttpRequest) -> JsonResponse:
-    """
-    API برای لیدر: وضعیت حضور خودش در غرفه‌ها را برمی‌گرداند.
-    """
     active_visits = BoothVisit.objects.filter(
         leader=request.user, is_active=True
     ).values_list("booth_id", flat=True)
@@ -96,9 +83,6 @@ def leader_status_api(request: HttpRequest) -> JsonResponse:
 @login_required
 @user_passes_test(is_leader)
 def all_booths_status_api(request: HttpRequest) -> JsonResponse:
-    """
-    API جدید برای polling: وضعیت فعلی همه غرفه‌ها را برای لیدرها برمی‌گرداند
-    """
     booths = Booth.objects.all().order_by("id")
     result = []
     for booth in booths:
@@ -254,9 +238,6 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
 @login_required
 @user_passes_test(is_exhibition_admin)
 def admin_booth_status_api(request: HttpRequest) -> JsonResponse:
-    """
-    API ساده برای داشبورد ادمین (polling fallback یا رفرش دوره‌ای).
-    """
     booths = Booth.objects.all().order_by("id")
     result: list[dict] = []
     for booth in booths:
@@ -324,7 +305,6 @@ def admin_force_exit(
 @login_required
 @user_passes_test(is_exhibition_admin)
 def leader_list(request: HttpRequest) -> HttpResponse:
-    """لیست همه لیدرها"""
     leaders_group = Group.objects.get(name="leaders")
     leaders = leaders_group.user_set.all().order_by("username")
     
@@ -345,7 +325,6 @@ def leader_list(request: HttpRequest) -> HttpResponse:
 @login_required
 @user_passes_test(is_exhibition_admin)
 def leader_create(request: HttpRequest) -> HttpResponse | JsonResponse:
-    """افزودن لیدر جدید"""
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
@@ -374,7 +353,6 @@ def leader_create(request: HttpRequest) -> HttpResponse | JsonResponse:
 @login_required
 @user_passes_test(is_exhibition_admin)
 def leader_edit(request: HttpRequest, user_id: int) -> HttpResponse | JsonResponse:
-    """ویرایش لیدر"""
     leader = get_object_or_404(User, pk=user_id)
     leaders_group = Group.objects.get(name="leaders")
     
@@ -414,7 +392,6 @@ def leader_edit(request: HttpRequest, user_id: int) -> HttpResponse | JsonRespon
 @login_required
 @user_passes_test(is_exhibition_admin)
 def leader_delete(request: HttpRequest, user_id: int) -> JsonResponse:
-    """حذف لیدر"""
     if request.method != "POST":
         return JsonResponse({"error": "درخواست نامعتبر است."}, status=400)
     
@@ -446,7 +423,6 @@ def leader_delete(request: HttpRequest, user_id: int) -> JsonResponse:
 @login_required
 @user_passes_test(is_exhibition_admin)
 def leader_reset_password(request: HttpRequest, user_id: int) -> JsonResponse:
-    """ریست رمز عبور لیدر"""
     if request.method != "POST":
         return JsonResponse({"error": "درخواست نامعتبر است."}, status=400)
     
@@ -470,3 +446,39 @@ def leader_reset_password(request: HttpRequest, user_id: int) -> JsonResponse:
     leader.save()
     
     return JsonResponse({"success": True}, status=200)
+
+
+# ========== APIهای تیک‌باکس ==========
+
+@login_required
+@user_passes_test(is_leader)
+@require_POST
+def toggle_booth_check(request: HttpRequest, booth_id: int) -> JsonResponse:
+    booth = get_object_or_404(Booth, pk=booth_id)
+    
+    check, created = LeaderBoothStatus.objects.get_or_create(
+        leader=request.user,
+        booth=booth,
+    )
+    check.is_checked = not check.is_checked
+    check.save()
+    
+    return JsonResponse({"success": True, "is_checked": check.is_checked})
+
+
+@login_required
+@user_passes_test(is_leader)
+def get_checked_booths(request: HttpRequest) -> JsonResponse:
+    checked = LeaderBoothStatus.objects.filter(
+        leader=request.user, is_checked=True
+    ).values_list('booth_id', flat=True)
+    
+    return JsonResponse({"checked_booth_ids": list(checked)})
+
+
+@login_required
+@user_passes_test(is_leader)
+@require_POST
+def reset_all_booth_checks(request: HttpRequest) -> JsonResponse:
+    LeaderBoothStatus.objects.filter(leader=request.user).update(is_checked=False)
+    return JsonResponse({"success": True})

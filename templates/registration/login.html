@@ -8,12 +8,77 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body, * { font-family: 'Shabnam', sans-serif !important; }
+
+    /* استایل کادر لاگین */
+    .login-card {
+      background-color: #0A1F2E80;
+      border: 1px solid rgba(46,159,115,0.3);
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(46,159,115,0.15);
+      transition: all 0.4s ease;
+      padding: 2.5rem;
+    }
+
+    /* hover قوی‌تر */
+    .login-card:hover {
+      border-color: rgba(182,233,214,0.7);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 40px rgba(182,233,214,0.5);
+      transform: scale(1.03);
+    }
+
+    /* Floating label */
+    .floating-group {
+      position: relative;
+    }
+
+    .floating-group input {
+      width: 100%;
+      background-color: #0A1F2E;
+      border: 1px solid rgba(46,159,115,0.5);
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      color: #EAF5F1;
+      font-size: 1.125rem;
+      transition: all 0.3s ease;
+    }
+
+    .floating-group input:focus {
+      outline: none;
+      border-color: #B6E9D6;
+      box-shadow: 0 0 0 4px rgba(182,233,214,0.2);
+    }
+
+    .floating-group label {
+      position: absolute;
+      right: 1.5rem;
+      top: 1rem;
+      color: #B6E9D6;
+      font-size: 1.125rem;
+      font-weight: 500;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      transform-origin: right;
+    }
+
+    .floating-group input:focus + label,
+    .floating-group input:not(:placeholder-shown) + label {
+      top: -0.75rem;
+      right: 1rem;
+      font-size: 0.875rem;
+      background-color: #0A1F2E;
+      padding: 0 0.5rem;
+      color: #B6E9D6;
+    }
+
+    .floating-group input::placeholder {
+      color: transparent;
+    }
   </style>
 </head>
-<body class="bg-[#15173D] min-h-screen flex items-center justify-center font-shabnam">
-  <div class="w-full max-w-md bg-[#1E1F3D] rounded-3xl shadow-2xl p-10 border border-[#982598]/30 transition-all duration-500 hover:shadow-[0_0_50px_rgba(228,145,201,0.4)] hover:scale-[1.02]">
-    <h1 class="text-3xl font-bold text-center mb-10 text-[#F1E9E9]">
-        ورود به پنل کاربری
+<body class="bg-[#0A1F2E] min-h-screen flex items-center justify-center font-shabnam">
+  <div class="login-card w-full max-w-md">
+    <h1 class="text-3xl font-bold text-center mb-10 text-[#EAF5F1]">
+      ورود به پنل کاربری
     </h1>
 
     {% if form.errors %}
@@ -22,21 +87,17 @@
       </div>
     {% endif %}
 
-    <form method="post" action="" id="login-form" class="space-y-5">
+    <form method="post" action="" id="login-form" class="space-y-8">
       {% csrf_token %}
 
-      <div>
-        <label class="block text-[#E491C9] text-lg font-medium mb-3">نام کاربری</label>
-        <input type="text" name="username"
-               class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-6 py-4 text-[#F1E9E9] text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
-               autofocus required>
+      <div class="floating-group">
+        <input type="text" name="username" id="username" placeholder=" " autofocus required>
+        <label for="username">نام کاربری</label>
       </div>
 
-      <div>
-        <label class="block text-[#E491C9] text-lg font-medium mb-3">رمز عبور</label>
-        <input type="password" name="password"
-               class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-6 py-4 text-[#F1E9E9] text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
-               required>
+      <div class="floating-group">
+        <input type="password" name="password" id="password" placeholder=" " required>
+        <label for="password">رمز عبور</label>
       </div>
 
       {% if next %}
@@ -44,11 +105,11 @@
       {% endif %}
 
       <button type="submit"
-              class="w-full bg-[#982598] hover:bg-[#E491C9] text-white text-xl font-bold py-4 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(228,145,201,0.6)] shadow-xl">
+              class="w-full bg-[#2E9F73] hover:bg-[#B6E9D6] text-white text-xl font-bold py-4 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(182,233,214,0.5)] shadow-xl">
         ورود
       </button>
 
-      <p class="text-center text-[#F1E9E9]/60 text-sm mt-8">
+      <p class="text-center text-[#EAF5F1]/60 text-sm mt-8">
         DEVELOPED BY DEVSHIDO
       </p>
     </form>
@@ -59,6 +120,5 @@
     sessionStorage.setItem('just_logged_in', 'true');
   });
 </script>
-
 </body>
 </html>

@@ -12,10 +12,10 @@
     body, * { font-family: 'Shabnam', sans-serif !important; }
   </style>
 </head>
-<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-shabnam">
+<body class="bg-[#0A1F2E] min-h-screen text-[#EAF5F1] font-shabnam">
   <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-      <h1 class="text-2xl md:text-2xl font-bold">
+      <h1 class="text-2xl md:text-3xl font-bold">
         مدیریت لیدرها
         {% if user.last_name %}
           ({{ user.last_name }} 🙋‍♂️)
@@ -28,11 +28,11 @@
 
       <div class="flex flex-wrap items-center gap-3">
         <a href="/exhibition-admin/dashboard/"
-           class="px-5 py-2.5 bg-[#982598] hover:bg-[#E491C9] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
+           class="px-5 py-2.5 bg-[#2E9F73] hover:bg-[#B6E9D6] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(46,159,115,0.4)]">
           بازگشت به داشبورد
         </a>
         <button id="add-leader-btn"
-                class="px-5 py-2.5 bg-[#E491C9] hover:bg-[#982598] text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(228,145,201,0.4)]">
+                class="px-5 py-2.5 bg-[#B6E9D6] hover:bg-[#2E9F73] text-[#0F3D2E] rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(46,159,115,0.4)]">
           افزودن لیدر جدید
         </button>
       </div>
@@ -40,33 +40,33 @@
 
     <div id="alert-area" class="mb-6"></div>
 
-    <div class="bg-[#1E1F3D] rounded-3xl shadow-2xl overflow-hidden border border-[#982598]/20">
+    <div class="bg-[#0A1F2E]/80 rounded-3xl shadow-2xl overflow-hidden border border-[#2E9F73]/30">
       <div class="overflow-x-auto">
         <table class="w-full min-w-max text-right">
-          <thead class="bg-[#15173D]/80">
+          <thead class="bg-[#0A1F2E]/80">
             <tr>
-              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">نام کاربری</th>
-              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">وضعیت</th>
-              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">حضور فعال</th>
-              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#E491C9]">عملیات</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#B6E9D6]">نام کاربری</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#B6E9D6]">وضعیت</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#B6E9D6]">حضور فعال</th>
+              <th class="px-4 py-4 md:px-6 md:py-5 text-right text-sm md:text-base font-bold text-[#B6E9D6]">عملیات</th>
             </tr>
           </thead>
           <tbody id="leaders-table-body">
             {% for leader in leaders %}
-              <tr class="border-b border-[#982598]/10 hover:bg-[#15173D]/50 transition-all duration-300" data-leader-id="{{ leader.id }}">
+              <tr class="border-b border-[#2E9F73]/10 hover:bg-[#0A1F2E]/50 transition-all duration-300" data-leader-id="{{ leader.id }}">
                 <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">{{ leader.username }}</td>
                 <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
                   {% if leader.is_active %}
-                    <span class="text-green-400">فعال</span>
+                    <span class="text-[#EAF5F1]">فعال</span>
                   {% else %}
                     <span class="text-red-400">غیرفعال</span>
                   {% endif %}
                 </td>
                 <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
                   {% if leader.active_visits > 0 %}
-                    <span class="text-[#E491C9]">{{ leader.active_visits }} غرفه</span>
+                    <span class="text-[#B6E9D6]">{{ leader.active_visits }} غرفه</span>
                   {% else %}
-                    <span class="text-[#F1E9E9]/50">هیچ</span>
+                    <span class="text-[#EAF5F1]/50">هیچ</span>
                   {% endif %}
                 </td>
                 <td class="px-4 py-4 md:px-6 md:py-5 text-sm md:text-base">
@@ -80,7 +80,7 @@
                     <button
                       data-leader-id="{{ leader.id }}"
                       data-username="{{ leader.username }}"
-                      class="reset-password-btn px-3 py-1.5 md:px-4 md:py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs md:text-sm transition-all duration-300 hover:scale-105">
+                      class="reset-password-btn px-3 py-1.5 md:px-4 md:py-2 bg-[#2E9F73] hover:bg-[#B6E9D6] text-white rounded-xl text-xs md:text-sm transition-all duration-300 hover:scale-105">
                       ریست رمز
                     </button>
                     <button
@@ -94,7 +94,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="4" class="px-6 py-12 text-center text-[#F1E9E9]/50 text-base md:text-lg">
+                <td colspan="4" class="px-6 py-12 text-center text-[#EAF5F1]/50 text-base md:text-lg">
                   هیچ لیدری ثبت نشده است.
                 </td>
               </tr>
@@ -107,23 +107,23 @@
 
   <!-- Modal افزودن/ویرایش لیدر -->
   <div id="leader-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-    <div class="bg-[#1E1F3D] rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#982598]/30 shadow-2xl">
-      <h2 id="modal-title" class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-[#F1E9E9]">افزودن لیدر جدید</h2>
+    <div class="bg-[#0A1F2E]/80 rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#2E9F73]/30 shadow-2xl">
+      <h2 id="modal-title" class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-[#EAF5F1]">افزودن لیدر جدید</h2>
       <form id="leader-form" class="space-y-5 md:space-y-6">
         <input type="hidden" id="leader-id-input" name="leader_id" value="">
         <div>
-          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-2 md:mb-3">نام کاربری</label>
+          <label class="block text-[#B6E9D6] text-base md:text-lg font-medium mb-2 md:mb-3">نام کاربری</label>
           <input type="text" id="username-input" name="username" required
-                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300">
+                 class="w-full bg-[#0A1F2E] border border-[#2E9F73]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#EAF5F1] text-base md:text-lg focus:outline-none focus:border-[#B6E9D6] focus:ring-4 focus:ring-[#B6E9D6]/30 transition-all duration-300">
         </div>
         <div>
-          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-2 md:mb-3">رمز عبور</label>
+          <label class="block text-[#B6E9D6] text-base md:text-lg font-medium mb-2 md:mb-3">رمز عبور</label>
           <input type="password" id="password-input" name="password"
-                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg placeholder-[#F1E9E9]/50 focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300"
+                 class="w-full bg-[#0A1F2E] border border-[#2E9F73]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#EAF5F1] text-base md:text-lg placeholder-[#EAF5F1]/50 focus:outline-none focus:border-[#B6E9D6] focus:ring-4 focus:ring-[#B6E9D6]/30 transition-all duration-300"
                  placeholder="برای ویرایش خالی بگذارید">
         </div>
         <div class="flex flex-col sm:flex-row gap-4">
-          <button type="submit" class="flex-1 px-6 py-3.5 bg-[#982598] hover:bg-[#E491C9] text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(228,145,201,0.5)]">
+          <button type="submit" class="flex-1 px-6 py-3.5 bg-[#2E9F73] hover:bg-[#B6E9D6] text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(46,159,115,0.5)]">
             ذخیره
           </button>
           <button type="button" id="cancel-modal-btn" class="flex-1 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105">
@@ -136,18 +136,18 @@
 
   <!-- Modal ریست رمز -->
   <div id="reset-password-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-    <div class="bg-[#1E1F3D] rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#982598]/30 shadow-2xl">
-      <h2 class="text-2xl md:text-3xl font-bold mb-6 text-[#F1E9E9]">ریست رمز عبور</h2>
-      <p class="text-base md:text-lg text-[#F1E9E9]/80 mb-8" id="reset-username-text"></p>
+    <div class="bg-[#0A1F2E]/80 rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 md:mx-6 border border-[#2E9F73]/30 shadow-2xl">
+      <h2 class="text-2xl md:text-3xl font-bold mb-6 text-[#EAF5F1]">ریست رمز عبور</h2>
+      <p class="text-base md:text-lg text-[#EAF5F1]/80 mb-8" id="reset-username-text"></p>
       <form id="reset-password-form" class="space-y-6">
         <input type="hidden" id="reset-leader-id-input" name="leader_id" value="">
         <div>
-          <label class="block text-[#E491C9] text-base md:text-lg font-medium mb-3">رمز عبور جدید</label>
+          <label class="block text-[#B6E9D6] text-base md:text-lg font-medium mb-3">رمز عبور جدید</label>
           <input type="password" id="reset-password-input" name="password" required
-                 class="w-full bg-[#15173D] border border-[#982598]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#F1E9E9] text-base md:text-lg focus:outline-none focus:border-[#E491C9] focus:ring-4 focus:ring-[#E491C9]/30 transition-all duration-300">
+                 class="w-full bg-[#0A1F2E] border border-[#2E9F73]/50 rounded-2xl px-5 py-3 md:px-6 md:py-4 text-[#EAF5F1] text-base md:text-lg focus:outline-none focus:border-[#B6E9D6] focus:ring-4 focus:ring-[#B6E9D6]/30 transition-all duration-300">
         </div>
         <div class="flex flex-col sm:flex-row gap-4">
-          <button type="submit" class="flex-1 px-6 py-3.5 bg-green-700 hover:bg-green-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(46,204,113,0.5)]">
+          <button type="submit" class="flex-1 px-6 py-3.5 bg-[#2E9F73] hover:bg-[#B6E9D6] text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(46,159,115,0.5)]">
             ذخیره
           </button>
           <button type="button" id="cancel-reset-btn" class="flex-1 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white text-base md:text-lg font-bold rounded-2xl transition-all duration-300 transform hover:scale-105">

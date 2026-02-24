@@ -12,86 +12,183 @@
     body, * { font-family: 'Shabnam', sans-serif !important; }
   </style>
 </head>
-<body class="bg-[#15173D] min-h-screen text-[#F1E9E9] font-shabnam">
-  <script>
-    if (sessionStorage.getItem('just_logged_in') === 'true') {
-      sessionStorage.removeItem('just_logged_in');
-      window.location.reload();
-    }
-  </script>
-  <div class="max-w-3xl mx-auto py-10 px-6">
-  <div class="flex justify-between items-center mb-10 flex-wrap gap-2">
-    <h1 class="text-2xl md:text-3xl font-bold">  <!-- ← اندازه فونت کوچکتر شد -->
-       غرفه ها
-      {% if user.last_name %}
-        ({{ user.last_name }} 🙋‍♂️)
-      {% elif user.first_name %}
-        ({{ user.first_name }} 🙋‍♂️)
-      {% else %}
-        ({{ user.username }} 🙋‍♂️)
-      {% endif %}
-    </h1>
+<body class="bg-[#0A1F2E] min-h-screen text-[#EAF5F1] font-shabnam">
 
-    {% if user.is_authenticated %}
-      <form action="{% url 'logout' %}" method="post" class="inline">
-        {% csrf_token %}
-        <button type="submit"
-                class="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white rounded-xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(255,107,107,0.5)]">
-          خروج
+  <div class="max-w-3xl mx-auto py-10 px-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <h1 class="text-2xl md:text-3xl font-bold">
+        غرفه ها
+        {% if user.last_name %}
+          ({{ user.last_name }} 🙋‍♂️)
+        {% elif user.first_name %}
+          ({{ user.first_name }} 🙋‍♂️)
+        {% else %}
+          ({{ user.username }} 🙋‍♂️)
+        {% endif %}
+      </h1>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="reset-checks-btn"
+                class="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white rounded-2xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(255,107,107,0.5)]">
+          ریست همه تیک‌ها
         </button>
-      </form>
-    {% endif %}
-  </div>
+
+        {% if user.is_authenticated %}
+          <form action="{% url 'logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm md:text-base font-medium transition-all duration-300 transform hover:scale-105">
+              خروج
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
 
     <div id="alert-area" class="mb-6"></div>
 
     <div class="space-y-6">
       {% for booth in booths %}
         <div id="booth-card-{{ booth.id }}"
-             class="bg-[#1E1F3D] rounded-3xl shadow-xl p-6 border border-[#982598]/20 hover:border-[#E491C9]/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(228,145,201,0.3)] hover:scale-[1.02]">
-          <div class="flex justify-between items-center mb-4">
-            <span class="text-xl font-bold text-[#E491C9]">
-              {{ booth.name }}
-            </span>
-            <span class="text-sm text-[#F1E9E9]/70">
-              ظرفیت: {{ booth.max }}
-            </span>
+             class="bg-[#0A1F2E]/80 rounded-3xl shadow-xl p-6 border border-[#2E9F73]/30 hover:border-[#B6E9D6]/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(46,159,115,0.3)] hover:scale-[1.02] flex items-start gap-4">
+          
+          <!-- تیک‌باکس -->
+          <div class="pt-1">
+            <input type="checkbox" id="check-{{ booth.id }}" class="w-6 h-6 accent-[#2E9F73] cursor-pointer">
           </div>
 
-          <div class="flex justify-between items-center mb-4 text-sm">
-            <span id="occupied-{{ booth.id }}">
-              اشغال: {{ booth.occupied }} / {{ booth.max }}
-            </span>
-            <span id="remaining-{{ booth.id }}">
-              باقی‌مانده: {{ booth.remaining }}
-            </span>
-          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-xl font-bold text-[#B6E9D6]">
+                {{ booth.name }}
+              </span>
+              <span class="text-sm text-[#EAF5F1]/70">
+                ظرفیت: {{ booth.max_groups }}
+              </span>
+            </div>
 
-          <div class="flex space-x-4 space-x-reverse">
-            <button
-              data-booth-id="{{ booth.id }}"
-              class="enter-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
-                     {% if booth.remaining <= 0 %}bg-gray-700 cursor-not-allowed{% else %}bg-[#982598] hover:bg-[#E491C9] hover:shadow-[0_0_25px_rgba(228,145,201,0.5)]{% endif %}">
-              ورود
-            </button>
+            <div class="flex justify-between items-center mb-4 text-sm">
+              <span id="occupied-{{ booth.id }}">
+                اشغال: {{ booth.occupied }} / {{ booth.max_groups }}
+              </span>
+              <span id="remaining-{{ booth.id }}">
+                باقی‌مانده: {{ booth.remaining }}
+              </span>
+            </div>
 
-            <button
-              data-booth-id="{{ booth.id }}"
-              class="exit-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
-                     {% if booth.is_user_inside %}bg-red-700 hover:bg-red-600 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]{% else %}bg-gray-700 cursor-not-allowed{% endif %}">
-              خروج
-            </button>
+            <div class="flex space-x-4 space-x-reverse">
+              <button
+                data-booth-id="{{ booth.id }}"
+                class="enter-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
+                       {% if booth.remaining <= 0 %}bg-gray-700 cursor-not-allowed{% else %}bg-[#2E9F73] hover:bg-[#B6E9D6] hover:shadow-[0_0_25px_rgba(46,159,115,0.5)]{% endif %}">
+                ورود
+              </button>
+
+              <button
+                data-booth-id="{{ booth.id }}"
+                class="exit-btn flex-1 px-6 py-3.5 rounded-2xl text-white text-base font-medium transition-all duration-300 transform hover:scale-105
+                       {% if booth.is_user_inside %}bg-red-700 hover:bg-red-600 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]{% else %}bg-gray-700 cursor-not-allowed{% endif %}">
+                خروج
+              </button>
+            </div>
           </div>
         </div>
       {% endfor %}
     </div>
 
-    <p class="text-center text-[#F1E9E9]/50 text-sm mt-12">
+    <p class="text-center text-[#EAF5F1]/50 text-sm mt-12">
       DEVELOPED BY DEVSHIDO
     </p>
   </div>
 
 <script>
+  // لود وضعیت تیک‌ها از سرور
+  async function loadCheckedBooths() {
+    try {
+      const response = await fetch("/leader/checked-booths/", {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      if (!response.ok) {
+        console.error("خطا در گرفتن تیک‌ها:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("تیک‌های ذخیره‌شده:", data); // برای دیباگ - در کنسول ببین
+
+      const checkedIds = data.checked_booth_ids || [];
+
+      document.querySelectorAll('input[type="checkbox"][id^="check-"]').forEach(checkbox => {
+        const boothId = checkbox.id.replace('check-', '');
+        checkbox.checked = checkedIds.includes(parseInt(boothId));
+      });
+    } catch (e) {
+      console.error("خطا در لود تیک‌ها:", e);
+    }
+  }
+
+  // وقتی صفحه لود شد
+  window.addEventListener('load', () => {
+    loadCheckedBooths();
+  });
+
+  // وقتی چک‌باکس تغییر کرد، به سرور بفرست (فیکس اصلی)
+  document.querySelectorAll('input[type="checkbox"][id^="check-"]').forEach(checkbox => {
+    checkbox.addEventListener('change', async () => {
+      const boothId = checkbox.id.replace('check-', '');
+      
+      try {
+        const response = await fetch(`/leader/toggle-check/${boothId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+
+        if (!response.ok) {
+          console.error("خطا در ذخیره تیک:", response.status);
+          checkbox.checked = !checkbox.checked; // برگردون به حالت قبل
+          showAlert('خطا در ذخیره تیک.', 'error');
+          return;
+        }
+
+        const data = await response.json();
+        console.log("تیک تغییر کرد:", data);
+      } catch (e) {
+        console.error("خطا در ارسال تیک:", e);
+        checkbox.checked = !checkbox.checked; // برگردون
+        showAlert('مشکلی پیش آمد.', 'error');
+      }
+    });
+  });
+
+  // دکمه ریست همه تیک‌ها
+  document.getElementById('reset-checks-btn').addEventListener('click', async () => {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید همه تیک‌ها را ریست کنید؟')) return;
+
+    try {
+      const response = await fetch('/leader/reset-all-checks/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      if (response.ok) {
+        document.querySelectorAll('input[type="checkbox"][id^="check-"]').forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        showAlert('همه تیک‌ها ریست شد.', 'success');
+      } else {
+        showAlert('خطا در ریست تیک‌ها.', 'error');
+      }
+    } catch (e) {
+      showAlert('مشکلی در ارتباط با سرور رخ داد.', 'error');
+    }
+  });
+
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -124,15 +221,14 @@
       });
 
       if (!response.ok) {
-        showAlert("در انجام عملیات خطایی رخ داد. لطفاً دوباره تلاش کنید.");
+        showAlert("در انجام عملیات خطایی رخ داد.", 'error');
         return;
       }
 
       pollAllBoothsStatus();
       pollLeaderStatus();
-      showAlert("عملیات با موفقیت انجام شد.", "success");
     } catch (e) {
-      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+      showAlert("مشکلی در ارتباط با سرور رخ داد.", 'error');
     }
   }
 
@@ -190,15 +286,17 @@
         if (enterBtn) {
           if (booth.remaining <= 0) {
             enterBtn.classList.add("bg-gray-700", "cursor-not-allowed");
-            enterBtn.classList.remove("bg-[#982598]");
+            enterBtn.classList.remove("bg-[#2E9F73]", "hover:bg-[#B6E9D6]");
+            enterBtn.title = "این غرفه پر است.";
           } else {
             enterBtn.classList.remove("bg-gray-700", "cursor-not-allowed");
-            enterBtn.classList.add("bg-[#982598]");
+            enterBtn.classList.add("bg-[#2E9F73]", "hover:bg-[#B6E9D6]");
+            enterBtn.removeAttribute('title');
           }
         }
       });
     } catch (e) {
-      console.log("خطا در polling وضعیت غرفه‌ها:", e);
+      console.log("خطا در polling:", e);
     }
   }
 

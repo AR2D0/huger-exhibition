@@ -9,6 +9,7 @@ class Booth(models.Model):
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True)
     max_groups = models.PositiveIntegerField()
+    current_visitors = models.PositiveIntegerField(default=0, verbose_name="تعداد بازدیدکنندگان فعلی")
 
     class Meta:
         verbose_name = "Booth"
@@ -41,3 +42,15 @@ class BoothVisit(models.Model):
     def __str__(self) -> str:
         return f"{self.leader.username} @ {self.booth.name}"
 
+# exhibition/models.py
+class LeaderBoothStatus(models.Model):
+    leader = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'groups__name': 'leaders'})
+    booth = models.ForeignKey(Booth, on_delete=models.CASCADE)
+    is_checked = models.BooleanField(default=False)
+    checked_at = models.DateTimeField(auto_now_add=True, null=True)
+
+    class Meta:
+        unique_together = ('leader', 'booth')  # هر لیدر فقط یک وضعیت برای هر غرفه داشته باشه
+        verbose_name = "Leader Booth Status"
+        verbose_name_plural = "Leader Booth Statuses"
+        
