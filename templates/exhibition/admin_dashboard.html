@@ -3,7 +3,7 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>داشبورد ادمین</title>
+  <title>پنل مدیریتی غرفه‌ها</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.fontcdn.ir/Font/Persian/Shabnam/Shabnam.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,47 +13,85 @@
   </style>
 </head>
 <body class="bg-[#0A1F2E] min-h-screen text-[#EAF5F1] font-shabnam">
+  <script>
+    if (sessionStorage.getItem('just_logged_in') === 'true') {
+      sessionStorage.removeItem('just_logged_in');
+      window.location.reload();
+    }
+  </script>
+  <div class="max-w-6xl mx-auto py-10 px-6">
+    <div class="flex justify-between items-center mb-10 flex-wrap gap-6">
+      <h1 class="text-2xl md:text-3xl font-bold">
+        مدیریت غرفه ها
+        {% if user.last_name %}
+          ({{ user.last_name }} 🙋‍♂️)
+        {% elif user.first_name %}
+          ({{ user.first_name }} 🙋‍♂️)
+        {% else %}
+          ({{ user.username }} 🙋‍♂️)
+        {% endif %}
+      </h1>
 
-  <div class="max-w-5xl mx-auto py-10 px-6">
-    <h1 class="text-3xl font-bold mb-8 text-center">وضعیت غرفه‌ها (ادمین)</h1>
+      <div class="flex items-center space-x-5 space-x-reverse">
+        <a href="/exhibition-admin/leaders/"
+           class="px-6 py-3 bg-[#2E9F73] hover:bg-[#B6E9D6] text-white rounded-xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(46,159,115,0.5)]">
+          مدیریت لیدرها
+        </a>
+
+        {% if user.is_authenticated %}
+          <form action="{% url 'logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white rounded-2xl text-base font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,107,107,0.5)]">
+              خروج
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="alert-area" class="mb-6"></div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for item in booth_status %}
-        <div class="bg-[#0A1F2E]/90 rounded-3xl p-6 border border-[#2E9F73]/30 shadow-xl hover:shadow-[0_0_30px_rgba(46,159,115,0.4)] transition-all">
-          <h2 class="text-xl font-bold text-[#B6E9D6] mb-4">{{ item.booth.name }}</h2>
-          
-          <div class="text-sm mb-3">
-            <span>ظرفیت لیدرها: {{ item.booth.max_groups }}</span>
-          </div>
-          
-          <div class="text-sm mb-3">
-            <span>لیدرهای حاضر: {{ item.occupied }} نفر</span>
-          </div>
-          
-          <div class="text-sm mb-4">
-            <span>باقی‌مانده ظرفیت: {{ item.remaining }} نفر</span>
+        <div id="admin-booth-card-{{ item.booth.id }}"
+             class="bg-[#0A1F2E]/80 rounded-3xl shadow-xl p-6 border border-[#2E9F73]/30 hover:border-[#B6E9D6]/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(46,159,115,0.3)] hover:scale-[1.02]">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xl font-bold text-[#B6E9D6]">
+              {{ item.booth.name }}
+            </span>
+            <span class="text-sm text-[#EAF5F1]/70">
+              ظرفیت کل: {{ item.booth.max_groups }}
+            </span>
           </div>
 
-          {% if item.leaders %}
-            <div class="mt-4">
-              <h3 class="text-sm font-medium text-[#EAF5F1]/80 mb-2">لیدرهای داخل غرفه:</h3>
-              <ul class="text-sm space-y-1">
-                {% for leader in item.leaders %}
-                  <li class="flex justify-between items-center">
-                    <span>{{ leader.username }}</span>
-                    <form action="{% url 'admin_force_exit' item.booth.id leader.id %}" method="post" class="inline">
-                      {% csrf_token %}
-                      <button type="submit" class="text-xs bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded">
-                        اخراج
-                      </button>
-                    </form>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% else %}
-            <p class="text-sm text-[#EAF5F1]/70 mt-4">هیچ لیدری داخل غرفه نیست</p>
-          {% endif %}
+          <div class="flex justify-between items-center mb-4 text-sm">
+            <span id="admin-occupied-{{ item.booth.id }}">
+              اشغال: {{ item.occupied }} / {{ item.booth.max_groups }}
+            </span>
+            <span id="admin-remaining-{{ item.booth.id }}">
+              باقی‌مانده: {{ item.remaining }}
+            </span>
+          </div>
+
+          <div>
+            <h3 class="text-base font-semibold text-[#2E9F73] mb-3">لیدرهای حاضر:</h3>
+            <ul id="admin-leaders-{{ item.booth.id }}" class="space-y-2 text-sm">
+              {% for leader in item.leaders %}
+                <li class="flex justify-between items-center bg-[#0A1F2E]/50 p-3 rounded-2xl border border-[#2E9F73]/10 hover:border-[#B6E9D6]/40 transition-all duration-300">
+                  <span class="text-[#EAF5F1]">{{ leader.username }}</span>
+                  <button
+                    data-booth-id="{{ item.booth.id }}"
+                    data-user-id="{{ leader.id }}"
+                    class="kick-btn text-xs px-4 py-2 bg-red-700 hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105">
+                    اخراج
+                  </button>
+                </li>
+              {% empty %}
+                <li class="text-[#EAF5F1]/50 text-center py-3">هیچ لیدری در این غرفه نیست.</li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
       {% endfor %}
     </div>
@@ -64,23 +102,164 @@
   </div>
 
 <script>
-  // polling برای بروزرسانی وضعیت غرفه‌ها در پنل ادمین
-  async function pollAdminStatus() {
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return "";
+  }
+
+  const csrftoken = getCookie("csrftoken");
+
+  function showAlert(message, type="error") {
+    const alertArea = document.getElementById("alert-area");
+    const bg = type === "error" ? "bg-red-900/40" : "bg-green-900/40";
+    const text = type === "error" ? "text-red-300" : "text-green-300";
+    alertArea.innerHTML = `
+      <div class="${bg} ${text} px-5 py-3 rounded-2xl text-sm mb-6 border border-red-500/30">
+        ${message}
+      </div>
+    `;
+    setTimeout(() => { alertArea.innerHTML = ""; }, 3000);
+  }
+
+  async function postKick(url) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      if (!response.ok) {
+        showAlert("در انجام عملیات خطایی رخ داد. لطفاً دوباره تلاش کنید.");
+        return;
+      }
+
+      showAlert("عملیات با موفقیت انجام شد.", "success");
+    } catch (e) {
+      showAlert("مشکلی در ارتباط با سرور رخ داد.");
+    }
+  }
+
+  document.querySelectorAll(".kick-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const boothId = btn.dataset.boothId;
+      const userId = btn.dataset.userId;
+      const url = `/exhibition-admin/booths/${boothId}/kick/${userId}/`;
+      postKick(url);
+    });
+  });
+
+  function applySnapshotFromBooth(booth) {
+    const boothId = booth.id;
+
+    const occupiedSpan = document.getElementById(`admin-occupied-${boothId}`);
+    const remainingSpan = document.getElementById(`admin-remaining-${boothId}`);
+    if (occupiedSpan && remainingSpan) {
+      const total = booth.occupied + booth.remaining;
+      occupiedSpan.textContent = `اشغال: ${booth.occupied} / ${total}`;
+      remainingSpan.textContent = `باقی‌مانده: ${booth.remaining}`;
+    }
+
+    const list = document.getElementById(`admin-leaders-${boothId}`);
+    if (list) {
+      list.innerHTML = "";
+      if (!booth.leaders || booth.leaders.length === 0) {
+        list.innerHTML = '<li class="text-gray-500 text-sm">هیچ لیدری در این غرفه نیست.</li>';
+      } else {
+        booth.leaders.forEach(leader => {
+          const li = document.createElement("li");
+          li.className = "flex justify-between items-center border-b pb-1";
+
+          const username = typeof leader === "string" ? leader : leader.username;
+          const leaderId = typeof leader === "object" && leader.id ? leader.id : null;
+
+          if (leaderId) {
+            li.innerHTML = `
+              <span>${username}</span>
+              <button
+                data-booth-id="${boothId}"
+                data-user-id="${leaderId}"
+                class="kick-btn text-xs px-2 py-1 rounded bg-red-500 text-white">
+                اخراج
+              </button>
+            `;
+            const kickBtn = li.querySelector(".kick-btn");
+            if (kickBtn) {
+              kickBtn.addEventListener("click", () => {
+                const url = `/exhibition-admin/booths/${boothId}/kick/${leaderId}/`;
+                postKick(url);
+              });
+            }
+          } else {
+            li.innerHTML = `
+              <span>${username}</span>
+              <span class="text-xs text-gray-400">آنلاین</span>
+            `;
+          }
+
+          list.appendChild(li);
+        });
+      }
+    }
+  }
+
+  try {
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/capacity/`);
+
+    ws.onopen = function () {
+      console.log("WebSocket ادمین متصل شد");
+    };
+
+    ws.onerror = function (error) {
+      console.error("خطای WebSocket ادمین:", error);
+    };
+
+    ws.onmessage = function (event) {
+      console.log("پیام دریافتی ادمین از WebSocket:", event.data);
+
+      let message;
+      try {
+        message = JSON.parse(event.data);
+      } catch (e) {
+        console.error("خطا در پارس JSON در ادمین:", e);
+        return;
+      }
+
+      if (message.type !== "capacity.update") {
+        console.log("پیام ناشناخته در ادمین:", message);
+        return;
+      }
+
+      applySnapshotFromBooth({
+        id: message.booth_id,
+        occupied: message.occupied,
+        remaining: message.remaining,
+        leaders: message.leaders || [],
+      });
+    };
+  } catch (e) {
+    console.error("خطا در راه‌اندازی WebSocket ادمین:", e);
+  }
+
+  async function pollStatus() {
     try {
       const response = await fetch("/exhibition-admin/api/booth-status/", {
         headers: { "X-Requested-With": "XMLHttpRequest" },
       });
       if (!response.ok) return;
-
       const payload = await response.json();
-      // می‌تونی اینجا DOM رو بروز کنی اگر خواستی، ولی فعلاً صفحه ری‌لود دستی کافیه
-    } catch (e) {
-      console.log("خطا در polling ادمین:", e);
-    }
+      if (payload.booths && Array.isArray(payload.booths)) {
+        payload.booths.forEach(applySnapshotFromBooth);
+      }
+    } catch (e) {}
   }
 
-  setInterval(pollAdminStatus, 5000);
-  pollAdminStatus();
+  setInterval(pollStatus, 1500);
 </script>
 </body>
 </html>
